@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: diytoolshare-marketplace
+    env: node
+    plan: starter
+    buildCommand: |
+      cd apps/marketplace
+      yarn install --frozen-lockfile
+      yarn build
+    startCommand: |
+      cd apps/marketplace
+      yarn start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.0.0
+    healthCheckPath: /
+    autoDeploy: true
