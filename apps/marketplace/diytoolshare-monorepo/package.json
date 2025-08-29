@@ -1,0 +1,33 @@
+{
+  "name": "diytoolshare-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace @diytoolshare/marketplace dev\" \"yarn workspace @diytoolshare/api dev\"",
+    "dev:marketplace": "yarn workspace @diytoolshare/marketplace dev",
+    "dev:api": "yarn workspace @diytoolshare/api dev",
+    "build": "yarn workspaces run build",
+    "build:marketplace": "yarn workspace @diytoolshare/marketplace build",
+    "build:api": "yarn workspace @diytoolshare/api build",
+    "test": "yarn workspaces run test",
+    "lint": "yarn workspaces run lint",
+    "clean": "yarn workspaces run clean",
+    "install:all": "yarn install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5",
+    "prettier": "^3.1.1",
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=18.20.1",
+    "yarn": ">=1.22.0"
+  }
+}

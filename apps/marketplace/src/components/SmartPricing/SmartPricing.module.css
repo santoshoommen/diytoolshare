@@ -1,0 +1,357 @@
+@import '../../styles/customMediaQueries.css';
+
+.root {
+  /* Layout */
+  width: 100%;
+}
+
+.label {
+  /* Typography */
+  font-family: var(--fontFamily);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+  line-height: 1.4;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.pricingContainer {
+  /* Layout */
+  width: 100%;
+}
+
+.periodSelectorSection {
+  /* Layout */
+  margin-bottom: 24px;
+}
+
+.periodSelectorHeader {
+  /* Layout */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.periodSelectorTitle {
+  /* Typography */
+  font-size: 16px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+  margin: 0;
+}
+
+.toggleSelectorButton {
+  /* Layout */
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.toggleSelectorButton:hover {
+  border-color: var(--marketplaceColor);
+  color: var(--marketplaceColor);
+}
+
+.periodSelectorGrid {
+  /* Layout */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.periodToggle {
+  /* Layout */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.periodToggle:hover {
+  border-color: var(--marketplaceColor);
+  background: #f0f9ff;
+}
+
+.periodToggleActive {
+  border-color: var(--marketplaceColor);
+  background: #f0f9ff;
+}
+
+.periodToggleContent {
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.periodToggleLabel {
+  /* Typography */
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+}
+
+.periodToggleDays {
+  /* Typography */
+  font-size: 12px;
+  color: #64748b;
+}
+
+.periodToggleCheckbox {
+  /* Layout */
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  color: var(--marketplaceColor);
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.periodToggleActive .periodToggleCheckbox {
+  border-color: var(--marketplaceColor);
+  background: var(--marketplaceColor);
+  color: white;
+}
+
+.periodsGrid {
+  /* Layout */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.periodCard {
+  /* Layout */
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.periodCard:hover {
+  border-color: var(--marketplaceColor);
+  box-shadow: var(--boxShadow);
+}
+
+.periodHeader {
+  /* Layout */
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.periodLabel {
+  /* Typography */
+  font-size: 16px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.removeButton {
+  /* Layout */
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.removeButton:hover {
+  background-color: #fef2f2;
+}
+
+.priceInputWrapper {
+  /* Layout */
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.currencySymbol {
+  /* Typography */
+  padding: 8px 12px;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: var(--fontWeightMedium);
+  border-right: 1px solid #e2e8f0;
+  font-size: 14px;
+}
+
+.priceInput {
+  /* Typography */
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-family: var(--fontFamily);
+  color: var(--matterColor);
+}
+
+.priceInput:focus {
+  background: #f8fafc;
+}
+
+.periodDetails {
+  /* Layout */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.daysText {
+  font-weight: var(--fontWeightMedium);
+}
+
+.dailyRate {
+  color: var(--marketplaceColor);
+  font-weight: var(--fontWeightMedium);
+}
+
+.customPeriodSection {
+  /* Layout */
+  margin-bottom: 24px;
+}
+
+.addCustomButton {
+  /* Layout */
+  width: 100%;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.addCustomButton:hover {
+  border-color: var(--marketplaceColor);
+  color: var(--marketplaceColor);
+  background: #f0f9ff;
+}
+
+.customForm {
+  /* Layout */
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.customFormRow {
+  /* Layout */
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.customInput {
+  /* Typography */
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: var(--fontFamily);
+  color: var(--matterColor);
+}
+
+.customInput:focus {
+  outline: none;
+  border-color: var(--marketplaceColor);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.customFormActions {
+  /* Layout */
+  display: flex;
+  gap: 8px;
+}
+
+.saveCustomButton {
+  background: var(--marketplaceColor);
+  color: white;
+}
+
+.cancelCustomButton {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.pricingTips {
+  /* Layout */
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.tipsTitle {
+  /* Typography */
+  font-size: 16px;
+  font-weight: var(--fontWeightMedium);
+  color: #0369a1;
+  margin: 0 0 12px 0;
+}
+
+.tipsList {
+  /* Layout */
+  margin: 0;
+  padding-left: 20px;
+}
+
+.tipsList li {
+  /* Typography */
+  font-size: 14px;
+  color: #0c4a6e;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.tipsList li:last-child {
+  margin-bottom: 0;
+}
+
+@media (--viewportMedium) {
+  .periodSelectorGrid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  
+  .periodsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .customFormRow {
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 16px;
+  }
+}

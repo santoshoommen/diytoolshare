@@ -1,0 +1,240 @@
+@import '../../styles/customMediaQueries.css';
+
+.root {
+  /* Layout */
+  width: 100%;
+}
+
+.label {
+  /* Typography */
+  font-family: var(--fontFamily);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+  line-height: 1.4;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.calendarContainer {
+  /* Layout */
+  width: 100%;
+}
+
+.quickSelectionSection {
+  /* Layout */
+  margin-bottom: 20px;
+}
+
+.quickSelectionTitle {
+  /* Typography */
+  font-size: 16px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+  margin: 0 0 12px 0;
+}
+
+.quickSelectionButtons {
+  /* Layout */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quickButton {
+  /* Layout */
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.quickButton:hover {
+  border-color: var(--marketplaceColor);
+  color: var(--marketplaceColor);
+}
+
+.activeQuickButton {
+  background: var(--marketplaceColor);
+  border-color: var(--marketplaceColor);
+  color: white;
+}
+
+.calendar {
+  /* Layout */
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.calendarHeader {
+  /* Layout */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.navButton {
+  /* Layout */
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.navButton:hover {
+  border-color: var(--marketplaceColor);
+  color: var(--marketplaceColor);
+}
+
+.monthTitle {
+  /* Typography */
+  font-size: 18px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+  margin: 0;
+}
+
+.dayHeaders {
+  /* Layout */
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dayHeader {
+  /* Typography */
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: var(--fontWeightMedium);
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.calendarGrid {
+  /* Layout */
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendarDay {
+  /* Layout */
+  aspect-ratio: 1;
+  border: none;
+  background: white;
+  color: var(--matterColor);
+  font-size: 14px;
+  font-weight: var(--fontWeightRegular);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.calendarDay:hover:not(:disabled) {
+  background: #f0f9ff;
+  color: var(--marketplaceColor);
+}
+
+.calendarDay:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.otherMonth {
+  color: #cbd5e1;
+}
+
+.today {
+  background: #f0f9ff;
+  color: var(--marketplaceColor);
+  font-weight: var(--fontWeightMedium);
+}
+
+.selected {
+  background: var(--marketplaceColor);
+  color: white;
+  font-weight: var(--fontWeightMedium);
+}
+
+.selectedDatesSection {
+  /* Layout */
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.selectedDatesHeader {
+  /* Layout */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.selectedDatesTitle {
+  /* Typography */
+  font-size: 16px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+  margin: 0;
+}
+
+.clearButton {
+  /* Layout */
+  background: #ef4444;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.clearButton:hover {
+  background: #dc2626;
+}
+
+.selectedDatesList {
+  /* Layout */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selectedDate {
+  /* Layout */
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--matterColor);
+}
+
+@media (--viewportMedium) {
+  .quickSelectionButtons {
+    gap: 12px;
+  }
+  
+  .calendarDay {
+    font-size: 16px;
+  }
+  
+  .dayHeader {
+    font-size: 14px;
+    padding: 16px 8px;
+  }
+}

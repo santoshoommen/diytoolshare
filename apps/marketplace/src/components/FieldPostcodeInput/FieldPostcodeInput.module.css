@@ -1,0 +1,158 @@
+@import '../../styles/marketplaceDefaults.css';
+@import '../../styles/customMediaQueries.css';
+
+.root {
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+}
+
+.root label {
+  /* Typography */
+  font-family: var(--fontFamily);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--matterColor);
+  line-height: 1.4;
+
+  /* Layout */
+  display: block;
+  margin-bottom: 8px;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  /* Typography */
+  font-family: var(--fontFamily);
+  font-size: 16px;
+  font-weight: var(--fontWeightRegular);
+  color: var(--matterColor);
+  line-height: 1.4;
+
+  /* Layout */
+  width: 100%;
+  padding: 12px 40px 12px 12px;
+  border: 1px solid var(--matterColorNegative);
+  border-radius: 4px;
+  background-color: var(--matterColorLight);
+
+  /* Transition */
+  transition: all 0.2s ease-in-out;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--marketplaceColor);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.inputSuccess {
+  border-color: var(--marketplaceColor);
+  background-color: rgba(0, 128, 0, 0.05);
+}
+
+.inputError {
+  border-color: var(--failColor);
+  background-color: rgba(255, 0, 0, 0.05);
+}
+
+.inputValidating {
+  border-color: var(--marketplaceColor);
+  background-color: rgba(0, 0, 255, 0.05);
+}
+
+.spinnerWrapper {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  color: var(--marketplaceColor);
+}
+
+.validIcon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--marketplaceColor);
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--matterColorNegative);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.suggestion {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--matterColorNegative);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.suggestion:hover {
+  background-color: var(--matterColorLight);
+}
+
+.suggestion:last-child {
+  border-bottom: none;
+}
+
+.validationMessage {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--failColor);
+}
+
+.regionInfo {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--marketplaceColor);
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .input {
+    padding: 10px 36px 10px 10px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .spinnerWrapper,
+  .validIcon {
+    right: 10px;
+  }
+  
+  .suggestions {
+    max-height: 150px;
+  }
+}
