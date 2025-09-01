@@ -294,7 +294,7 @@ const SmartPricing = props => {
         {/* Pricing Tips */}
         <div className={css.pricingTips}>
           <h4 className={css.tipsTitle}>
-            <FormattedMessage id="SmartPricing.pricingTipsTitle" defaultMessage="💡 Pricing Tips" />
+            <FormattedMessage id="SmartPricing.pricingTipsTitle" defaultMessage="Pricing Tips" />
           </h4>
           <ul className={css.tipsList}>
             <li>Weekend rates are typically 1.8x daily rate</li>
