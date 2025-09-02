@@ -203,6 +203,50 @@ const ModernLandingPage = ({ consoleContent }) => {
           </div>
         </section>
 
+        {/* Feature Icons Section */}
+        <section className={css.featureIcons}>
+          <div className={css.container}>
+            <div className={css.featureIconsGrid}>
+              <div className={css.featureIconCard}>
+                <div className={css.featureIconPlaceholder}>
+                  <IconSearch className={css.featureIcon} />
+                </div>
+                <p className={css.featureIconCaption}>Find Tools</p>
+              </div>
+              <div className={css.featureIconCard}>
+                <div className={css.featureIconPlaceholder}>
+                  <IconEdit className={css.featureIcon} />
+                </div>
+                <p className={css.featureIconCaption}>DIY Projects</p>
+              </div>
+              <div className={css.featureIconCard}>
+                <div className={css.featureIconPlaceholder}>
+                  <IconLocation className={css.featureIcon} />
+                </div>
+                <p className={css.featureIconCaption}>Local Tools</p>
+              </div>
+              <div className={css.featureIconCard}>
+                <div className={css.featureIconPlaceholder}>
+                  <IconKeys className={css.featureIcon} />
+                </div>
+                <p className={css.featureIconCaption}>Secure Access</p>
+              </div>
+              <div className={css.featureIconCard}>
+                <div className={css.featureIconPlaceholder}>
+                  <IconAdd className={css.featureIcon} />
+                </div>
+                <p className={css.featureIconCaption}>List Tools</p>
+              </div>
+              <div className={css.featureIconCard}>
+                <div className={css.featureIconPlaceholder}>
+                  <IconCheckmark className={css.featureIcon} />
+                </div>
+                <p className={css.featureIconCaption}>Quality Assured</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Quick Actions Section - Use data from columns section */}
         <section className={css.quickActions}>
           <div className={css.container}>
