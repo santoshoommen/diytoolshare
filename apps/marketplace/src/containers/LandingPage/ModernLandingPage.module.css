@@ -134,44 +134,66 @@
   align-items: center;
 }
 
-.heroImageGrid {
+.heroIconGrid {
   /* Layout */
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  max-width: 300px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 400px;
 }
 
-.imageCard {
+.iconCard {
   /* Layout */
   text-align: center;
   transition: transform 0.2s ease;
 }
 
-.imageCard:hover {
+.iconCard:hover {
   transform: translateY(-2px);
 }
 
-.imagePlaceholder {
+.iconPlaceholder {
   /* Layout */
-  width: 80px;
-  height: 80px;
-  background: white;
-  border-radius: 12px;
+  width: 70px;
+  height: 70px;
+  background: #1e293b; /* slate-800 - much darker */
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  position: relative; /* For absolute positioning of icons */
+  overflow: hidden; /* Ensures icons don't overflow the rounded corners */
+}
+
+.iconPlaceholder:hover {
+  background: #0f172a; /* slate-900 - even darker on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 .toolIcon {
   /* Typography */
-  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  color: white;
+  filter: brightness(0) invert(1); /* Makes SVG icons white */
+  flex-shrink: 0; /* Prevents icons from shrinking */
+  display: block; /* Ensures proper sizing */
+  max-width: 100%; /* Prevents overflow */
+  max-height: 100%; /* Prevents overflow */
 }
 
-.imageCaption {
+/* Ensure SVG icons scale properly */
+.toolIcon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.iconCaption {
   /* Typography */
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.9);
@@ -285,6 +307,18 @@
   text-align: center;
   margin: 0 0 60px 0;
   letter-spacing: -0.025em;
+}
+
+.sectionDescription {
+  /* Typography */
+  font-size: 1.125rem;
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 40px 0;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .featuresGrid {
@@ -438,6 +472,17 @@
   line-height: 1.4;
 }
 
+.articleTitleLink {
+  /* Typography */
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.articleTitleLink:hover {
+  color: var(--marketplaceColor);
+}
+
 .articleDescription {
   /* Typography */
   font-size: 0.875rem;
@@ -445,6 +490,19 @@
   line-height: 1.5;
   margin: 0 0 16px 0;
   flex: 1;
+}
+
+.articleDescriptionLink {
+  /* Typography */
+  color: var(--marketplaceColor);
+  text-decoration: none;
+  font-weight: var(--fontWeightSemiBold);
+  transition: color 0.2s ease;
+}
+
+.articleDescriptionLink:hover {
+  color: var(--marketplaceColorDark);
+  text-decoration: underline;
 }
 
 .articleLink {
@@ -709,22 +767,21 @@
     max-width: none;
   }
   
-  .heroImageGrid {
-    max-width: 250px;
+  .heroIconGrid {
+    max-width: 300px;
   }
   
-  .imagePlaceholder {
+  .iconPlaceholder {
     width: 60px;
     height: 60px;
   }
   
   .toolIcon {
-    font-size: 1.25rem;
+    width: 32px;
+    height: 32px;
   }
   
-  .imageCaption {
-    color: rgba(255, 255, 255, 0.9);
-  }
+
   
   .actionsGrid {
     grid-template-columns: 1fr;
@@ -866,5 +923,20 @@
   
   .carouselArrow:last-of-type {
     right: -18px;
+  }
+  
+  .heroIconGrid {
+    max-width: 280px;
+    gap: 16px;
+  }
+  
+  .iconPlaceholder {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .toolIcon {
+    width: 28px;
+    height: 28px;
   }
 }

@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage } from '../../util/reactIntl';
-import { NamedLink, LayoutSingleColumn } from '../../components';
+import { 
+  NamedLink, 
+  LayoutSingleColumn, 
+  IconSearch, 
+  IconEdit, 
+  IconLocation, 
+  IconKeys, 
+  IconAdd, 
+  IconCheckmark 
+} from '../../components';
 import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
 import FooterContainer from '../../containers/FooterContainer/FooterContainer';
 import css from './ModernLandingPage.module.css';
@@ -13,73 +22,37 @@ const ModernLandingPage = ({ consoleContent }) => {
   const sections = consoleContent?.sections || [];
   console.log('sections', sections);
   
-  // Find hero section for background image
-  const heroSection = sections.find(section => section.sectionType === 'hero');
-  const heroBackgroundImage = heroSection?.appearance?.backgroundImage;
+  // Treat first section as hero section (regardless of sectionType)
+  const heroSection = sections[0];
+  const heroBackgroundImage = heroSection?.appearance?.backgroundImage?.attributes?.variants?.scaled1200?.url;
   const heroTitle = heroSection?.title?.content;
   const heroDescription = heroSection?.description?.content;
+  const heroCallToAction = heroSection?.callToAction;
+  
+  // Find columns section for services
+  const columnsSection = sections.find(section => section.sectionType === 'columns');
+  const serviceBlocks = columnsSection?.blocks || [];
   
   // Find carousel section for articles
   const carouselSection = sections.find(section => section.sectionType === 'carousel');
   const carouselBlocks = carouselSection?.blocks || [];
   
-  // Find other sections for images
-  const otherSections = sections.filter(section => 
-    section.sectionType !== 'hero' && 
-    section.sectionType !== 'carousel'
-  );
+  // Extract carousel images from console data
+  const carouselImages = carouselBlocks.map(block => ({
+    image: block.media?.image?.attributes?.variants?.landscape800?.url || 
+           block.media?.image?.attributes?.variants?.landscape1200?.url,
+    title: block.title?.content || '',
+    description: block.text?.content || '',
+    link: block.media?.link?.href || block.callToAction?.href || '/s',
+    alt: block.media?.alt || block.title?.content || '',
+    isExternalLink: !!(block.media?.link?.href || block.callToAction?.href)
+  })).filter(item => item.image); // Only include items with valid images
 
-  // Local images for carousel
-  const localCarouselImages = [
-    {
-      image: '/static/images/big-savings.png',
-      title: 'Big Savings',
-      description: 'Save money by renting tools instead of buying them. Pay only for what you need, when you need it.',
-      link: '/s'
-    },
-    {
-      image: '/static/images/diy-for-everyone.png',
-      title: 'DIY for Everyone',
-      description: 'From beginners to experts, find the tools you need to complete any project with confidence.',
-      link: '/s'
-    },
-    {
-      image: '/static/images/garden-diy.png',
-      title: 'Garden DIY',
-      description: 'Transform your outdoor space with professional garden tools available for rent.',
-      link: '/s'
-    },
-    {
-      image: '/static/images/book-shelf.png',
-      title: 'Home Projects',
-      description: 'Build, repair, and improve your home with quality tools from your neighbors.',
-      link: '/s'
-    },
-    {
-      image: '/static/images/garden.png',
-      title: 'Garden Projects',
-      description: 'Create beautiful outdoor spaces with professional gardening equipment.',
-      link: '/s'
-    },
-    {
-      image: '/static/images/kid-hammer.png',
-      title: 'Family Projects',
-      description: 'Get the whole family involved in DIY projects with safe, quality tools.',
-      link: '/s'
-    },
-    {
-      image: '/static/images/man-cave.png',
-      title: 'Man Cave Projects',
-      description: 'Build the ultimate man cave with professional tools and equipment.',
-      link: '/s'
-    },
-    {
-      image: '/static/images/shed-to-sharing.png',
-      title: 'Shed to Sharing',
-      description: 'Turn your unused tools into income by sharing them with the community.',
-      link: '/l/new'
-    }
-  ];
+
+  
+
+
+
 
   // Handle responsive card count
   useEffect(() => {
@@ -108,19 +81,19 @@ const ModernLandingPage = ({ consoleContent }) => {
 
   // Auto-advance carousel
   useEffect(() => {
-    if (localCarouselImages.length > cardsPerView) {
+    if (carouselImages.length > cardsPerView) {
       const interval = setInterval(() => {
         setCurrentSlide((prev) => {
-          const maxSlides = Math.ceil(localCarouselImages.length / cardsPerView) - 1;
+          const maxSlides = Math.ceil(carouselImages.length / cardsPerView) - 1;
           return prev >= maxSlides ? 0 : prev + 1;
         });
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [localCarouselImages.length, cardsPerView]);
+  }, [carouselImages.length, cardsPerView]);
 
   const nextSlide = () => {
-    const maxSlides = Math.ceil(localCarouselImages.length / cardsPerView) - 1;
+    const maxSlides = Math.ceil(carouselImages.length / cardsPerView) - 1;
     setCurrentSlide((prev) => Math.min(prev + 1, maxSlides));
   };
 
@@ -138,7 +111,7 @@ const ModernLandingPage = ({ consoleContent }) => {
         <section 
           className={css.hero}
           style={{
-            backgroundImage: `url('/static/images/hero.png')`,
+            backgroundImage: heroBackgroundImage ? `url(${heroBackgroundImage})` : `url('/static/images/hero.png')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
@@ -165,12 +138,18 @@ const ModernLandingPage = ({ consoleContent }) => {
                     )}
                   </p>
                   <div className={css.heroActions}>
-                    <NamedLink name="SearchPage" className={css.primaryButton}>
-                      <FormattedMessage 
-                        id="ModernLandingPage.findTools" 
-                        defaultMessage="Find Tools"
-                      />
-                    </NamedLink>
+                    {heroCallToAction?.href && heroCallToAction?.content ? (
+                      <NamedLink name="SearchPage" className={css.primaryButton}>
+                        {heroCallToAction.content}
+                      </NamedLink>
+                    ) : (
+                      <NamedLink name="SearchPage" className={css.primaryButton}>
+                        <FormattedMessage 
+                          id="ModernLandingPage.findTools" 
+                          defaultMessage="Find Tools"
+                        />
+                      </NamedLink>
+                    )}
                     <NamedLink name="NewListingPage" className={css.secondaryButton}>
                       <FormattedMessage 
                         id="ModernLandingPage.listTools" 
@@ -180,30 +159,42 @@ const ModernLandingPage = ({ consoleContent }) => {
                   </div>
                 </div>
                 <div className={css.heroVisual}>
-                  <div className={css.heroImageGrid}>
-                    <div className={css.imageCard}>
-                      <div className={css.imagePlaceholder}>
-                        <span className={css.toolIcon}>🔨</span>
+                  <div className={css.heroIconGrid}>
+                    <div className={css.iconCard}>
+                      <div className={css.iconPlaceholder}>
+                        <IconSearch className={css.toolIcon} />
                       </div>
-                      <p className={css.imageCaption}>Power Tools</p>
+                      <p className={css.iconCaption}>Find Tools</p>
                     </div>
-                    <div className={css.imageCard}>
-                      <div className={css.imagePlaceholder}>
-                        <span className={css.toolIcon}>🔧</span>
+                    <div className={css.iconCard}>
+                      <div className={css.iconPlaceholder}>
+                        <IconEdit className={css.toolIcon} />
                       </div>
-                      <p className={css.imageCaption}>Hand Tools</p>
+                      <p className={css.iconCaption}>DIY Projects</p>
                     </div>
-                    <div className={css.imageCard}>
-                      <div className={css.imagePlaceholder}>
-                        <span className={css.toolIcon}>🪜</span>
+                    <div className={css.iconCard}>
+                      <div className={css.iconPlaceholder}>
+                        <IconLocation className={css.toolIcon} />
                       </div>
-                      <p className={css.imageCaption}>Ladders</p>
+                      <p className={css.iconCaption}>Local Tools</p>
                     </div>
-                    <div className={css.imageCard}>
-                      <div className={css.imagePlaceholder}>
-                        <span className={css.toolIcon}>⚡</span>
+                    <div className={css.iconCard}>
+                      <div className={css.iconPlaceholder}>
+                        <IconKeys className={css.toolIcon} />
                       </div>
-                      <p className={css.imageCaption}>Electrical</p>
+                      <p className={css.iconCaption}>Secure Access</p>
+                    </div>
+                    <div className={css.iconCard}>
+                      <div className={css.iconPlaceholder}>
+                        <IconAdd className={css.toolIcon} />
+                      </div>
+                      <p className={css.iconCaption}>List Tools</p>
+                    </div>
+                    <div className={css.iconCard}>
+                      <div className={css.iconPlaceholder}>
+                        <IconCheckmark className={css.toolIcon} />
+                      </div>
+                      <p className={css.iconCaption}>Quality Assured</p>
                     </div>
                   </div>
                 </div>
@@ -212,64 +203,60 @@ const ModernLandingPage = ({ consoleContent }) => {
           </div>
         </section>
 
-        {/* Quick Actions Section */}
+        {/* Quick Actions Section - Use data from columns section */}
         <section className={css.quickActions}>
           <div className={css.container}>
+            {columnsSection?.title?.content && (
+              <h2 className={css.sectionTitle}>
+                {columnsSection.title.content}
+              </h2>
+            )}
+            {columnsSection?.description?.content && (
+              <p className={css.sectionDescription}>
+                {columnsSection.description.content}
+              </p>
+            )}
             <div className={css.actionsGrid}>
-              <div className={css.actionCard}>
-                <div className={css.actionImage}>
-                  <img 
-                    src="/static/images/services-search-listings.png" 
-                    alt="Search Tools" 
-                    className={css.actionImageSrc}
-                  />
+              {serviceBlocks.slice(0, 2).map((block, index) => (
+                <div key={index} className={css.actionCard}>
+                  <div className={css.actionImage}>
+                    <img 
+                      src={block.media?.image?.attributes?.variants?.square800?.url || 
+                           block.media?.image?.attributes?.variants?.square400?.url || 
+                           `/static/images/services-${index === 0 ? 'search-listings' : 'my-listings'}.png`} 
+                      alt={block.media?.alt || block.title?.content || 'Service'} 
+                      className={css.actionImageSrc}
+                    />
+                  </div>
+                  <h3 className={css.actionTitle}>
+                    {block.title?.content || (
+                      <FormattedMessage 
+                        id="ModernLandingPage.searchTools" 
+                        defaultMessage="Search Tools"
+                      />
+                    )}
+                  </h3>
+                  <p className={css.actionDescription}>
+                    {block.text?.content || (
+                      <FormattedMessage 
+                        id="ModernLandingPage.searchToolsDesc" 
+                        defaultMessage="Browse thousands of tools available in your area"
+                      />
+                    )}
+                  </p>
+                  <NamedLink 
+                    name={block.callToAction?.href?.includes('/s') ? 'SearchPage' : 'NewListingPage'} 
+                    className={css.actionLink}
+                  >
+                    {block.callToAction?.content || (
+                      <FormattedMessage 
+                        id="ModernLandingPage.startSearch" 
+                        defaultMessage="Start Searching"
+                      />
+                    )}
+                  </NamedLink>
                 </div>
-                <h3 className={css.actionTitle}>
-                  <FormattedMessage 
-                    id="ModernLandingPage.searchTools" 
-                    defaultMessage="Search Tools"
-                  />
-                </h3>
-                <p className={css.actionDescription}>
-                  <FormattedMessage 
-                    id="ModernLandingPage.searchToolsDesc" 
-                    defaultMessage="Browse thousands of tools available in your area"
-                  />
-                </p>
-                <NamedLink name="SearchPage" className={css.actionLink}>
-                  <FormattedMessage 
-                    id="ModernLandingPage.startSearch" 
-                    defaultMessage="Start Searching"
-                  />
-                </NamedLink>
-              </div>
-              <div className={css.actionCard}>
-                <div className={css.actionImage}>
-                  <img 
-                    src="/static/images/services-my-listings.png" 
-                    alt="List Your Tools" 
-                    className={css.actionImageSrc}
-                  />
-                </div>
-                <h3 className={css.actionTitle}>
-                  <FormattedMessage 
-                    id="ModernLandingPage.listTools" 
-                    defaultMessage="List Your Tools"
-                  />
-                </h3>
-                <p className={css.actionDescription}>
-                  <FormattedMessage 
-                    id="ModernLandingPage.listToolsDesc" 
-                    defaultMessage="Earn money by sharing your tools with the community"
-                  />
-                </p>
-                <NamedLink name="NewListingPage" className={css.actionLink}>
-                  <FormattedMessage 
-                    id="ModernLandingPage.startListing" 
-                    defaultMessage="Start Listing"
-                  />
-                </NamedLink>
-              </div>
+              ))}
             </div>
           </div>
         </section>
@@ -372,15 +359,22 @@ const ModernLandingPage = ({ consoleContent }) => {
           </div>
         </section>
 
-        {/* Articles Carousel Section */}
+        {/* Articles Carousel Section - Use data from console */}
         <section className={css.articlesSection}>
           <div className={css.container}>
             <h2 className={css.sectionTitle}>
-              <FormattedMessage 
-                id="ModernLandingPage.latestArticles" 
-                defaultMessage="Featured Projects & Tips"
-              />
+              {carouselSection?.title?.content || (
+                <FormattedMessage 
+                  id="ModernLandingPage.latestArticles" 
+                  defaultMessage="Featured Projects & Tips"
+                />
+              )}
             </h2>
+            {carouselSection?.description?.content && (
+              <p className={css.sectionDescription}>
+                {carouselSection.description.content}
+              </p>
+            )}
             <div className={css.carouselContainer}>
               <div className={css.carouselWrapper}>
                 <div 
@@ -389,26 +383,83 @@ const ModernLandingPage = ({ consoleContent }) => {
                     transform: `translateX(-${currentSlide * (100 / cardsPerView)}%)`
                   }}
                 >
-                  {localCarouselImages.map((item, index) => (
+                  {carouselImages.map((item, index) => (
                     <div key={index} className={css.carouselSlide}>
                       <div className={css.articleCard}>
                         <div className={css.articleImage}>
-                          <img 
-                            src={item.image} 
-                            alt={item.title} 
-                            className={css.articleImageSrc}
-                          />
+                          {item.isExternalLink ? (
+                            <a 
+                              href={item.link}
+                            >
+                              <img 
+                                src={item.image} 
+                                alt={item.alt} 
+                                className={css.articleImageSrc}
+                              />
+                            </a>
+                          ) : (
+                            <img 
+                              src={item.image} 
+                              alt={item.alt} 
+                              className={css.articleImageSrc}
+                            />
+                          )}
                         </div>
                         <div className={css.articleContent}>
                           <h3 className={css.articleTitle}>
-                            {item.title}
+                            {item.isExternalLink ? (
+                              <a 
+                                href={item.link} 
+                                className={css.articleTitleLink}
+                              >
+                                {item.title}
+                              </a>
+                            ) : (
+                              item.title
+                            )}
                           </h3>
                           <p className={css.articleDescription}>
-                            {item.description}
+                            {item.description ? (
+                              item.description.includes('[') && item.description.includes('](') ? (
+                                // Handle markdown-style links in description
+                                item.description.split(/(\[.*?\]\(.*?\))/).map((part, index) => {
+                                  const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
+                                  if (linkMatch) {
+                                    const [, linkText, linkUrl] = linkMatch;
+                                    return (
+                                      <a 
+                                        key={index}
+                                        href={linkUrl} 
+                                        className={css.articleDescriptionLink}
+                                      >
+                                        {linkText}
+                                      </a>
+                                    );
+                                  }
+                                  return part;
+                                })
+                              ) : (
+                                item.description
+                              )
+                            ) : null}
                           </p>
-                          <NamedLink name={item.link.includes('/s') ? 'SearchPage' : 'NewListingPage'} className={css.articleLink}>
-                            Learn More
-                          </NamedLink>
+                          {item.isExternalLink ? (
+                            <a 
+                              href={item.link} 
+                              className={css.articleLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Learn More
+                            </a>
+                          ) : (
+                            <NamedLink 
+                              name={item.link.includes('/s') ? 'SearchPage' : 'NewListingPage'} 
+                              className={css.articleLink}
+                            >
+                              Learn More
+                            </NamedLink>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -417,7 +468,7 @@ const ModernLandingPage = ({ consoleContent }) => {
               </div>
               
               {/* Carousel Navigation */}
-              {localCarouselImages.length > cardsPerView && (
+              {carouselImages.length > cardsPerView && (
                 <>
                   <button 
                     className={css.carouselArrow} 
@@ -431,14 +482,14 @@ const ModernLandingPage = ({ consoleContent }) => {
                     className={css.carouselArrow} 
                     onClick={nextSlide}
                     aria-label="Next articles"
-                    disabled={currentSlide >= Math.ceil(localCarouselImages.length / cardsPerView) - 1}
+                    disabled={currentSlide >= Math.ceil(carouselImages.length / cardsPerView) - 1}
                   >
                     ›
                   </button>
                   
                   {/* Carousel Dots */}
                   <div className={css.carouselDots}>
-                    {Array.from({ length: Math.ceil(localCarouselImages.length / cardsPerView) }, (_, index) => (
+                    {Array.from({ length: Math.ceil(carouselImages.length / cardsPerView) }, (_, index) => (
                       <button
                         key={index}
                         className={`${css.carouselDot} ${index === currentSlide ? css.carouselDotActive : ''}`}
