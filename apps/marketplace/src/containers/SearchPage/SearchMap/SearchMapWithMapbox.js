@@ -13,6 +13,7 @@ import { sdkBoundsToFixedCoordinates, hasSameSDKBounds } from '../../../util/map
 import SearchMapPriceLabel from '../SearchMapPriceLabel/SearchMapPriceLabel';
 import SearchMapInfoCard from '../SearchMapInfoCard/SearchMapInfoCard';
 import SearchMapGroupLabel from '../SearchMapGroupLabel/SearchMapGroupLabel';
+import RadiusCircles from './RadiusCircles';
 import { groupedByCoordinates, reducedToArray } from './SearchMap.helpers';
 import css from './SearchMapWithMapbox.module.css';
 
@@ -301,11 +302,34 @@ class SearchMapWithMapbox extends Component {
       }
     }
 
-    if (this.map) {
+    if (this.map && this.state.isMapReady) {
       const currentBounds = getMapBounds(this.map);
 
       // Additional safety check: ensure bounds are valid before calling fitMapToBounds
       const bounds = this.props.bounds;
+      
+      // Debug logging for bounds
+      console.log('SearchMapWithMapbox componentDidUpdate - bounds:', bounds);
+      console.log('SearchMapWithMapbox componentDidUpdate - bounds type:', typeof bounds);
+      console.log('SearchMapWithMapbox componentDidUpdate - bounds.ne:', bounds?.ne);
+      console.log('SearchMapWithMapbox componentDidUpdate - bounds.sw:', bounds?.sw);
+      
+      if (bounds && bounds.ne && bounds.sw) {
+        console.log('SearchMapWithMapbox componentDidUpdate - ne.lat type:', typeof bounds.ne.lat);
+        console.log('SearchMapWithMapbox componentDidUpdate - ne.lng type:', typeof bounds.ne.lng);
+        console.log('SearchMapWithMapbox componentDidUpdate - sw.lat type:', typeof bounds.sw.lat);
+        console.log('SearchMapWithMapbox componentDidUpdate - sw.lng type:', typeof bounds.sw.lng);
+        
+        if (typeof bounds.ne.lat === 'function') {
+          console.log('SearchMapWithMapbox componentDidUpdate - ne.lat():', bounds.ne.lat());
+          console.log('SearchMapWithMapbox componentDidUpdate - ne.lng():', bounds.ne.lng());
+        }
+        if (typeof bounds.sw.lat === 'function') {
+          console.log('SearchMapWithMapbox componentDidUpdate - sw.lat():', bounds.sw.lat());
+          console.log('SearchMapWithMapbox componentDidUpdate - sw.lng():', bounds.sw.lng());
+        }
+      }
+      
       const hasValidBounds = bounds && 
         bounds.ne && bounds.sw && 
         (typeof bounds.ne.lat === 'function' ? bounds.ne.lat() : bounds.ne.lat) &&
@@ -313,13 +337,25 @@ class SearchMapWithMapbox extends Component {
         (typeof bounds.sw.lat === 'function' ? bounds.sw.lat() : bounds.sw.lat) &&
         (typeof bounds.sw.lng === 'function' ? bounds.sw.lng() : bounds.sw.lng);
 
+      console.log('SearchMapWithMapbox componentDidUpdate - hasValidBounds:', hasValidBounds);
+      console.log('SearchMapWithMapbox componentDidUpdate - currentBounds:', currentBounds);
+      console.log('SearchMapWithMapbox componentDidUpdate - bounds !== currentBounds:', !isEqual(bounds, currentBounds));
+      console.log('SearchMapWithMapbox componentDidUpdate - !this.viewportBounds:', !this.viewportBounds);
+
       // Do not call fitMapToBounds if bounds are the same or invalid.
       // Our bounds are viewport bounds, and fitBounds will try to add margins around those bounds
       // that would result to zoom-loop (bound change -> fitmap -> bounds change -> ...)
       if (hasValidBounds && !isEqual(bounds, currentBounds) && !this.viewportBounds) {
+        console.log('SearchMapWithMapbox componentDidUpdate - Calling fitMapToBounds with bounds:', bounds);
         fitMapToBounds(this.map, bounds, { padding: 0, isAutocompleteSearch: true });
       } else if (!hasValidBounds) {
         console.warn('SearchMapWithMapbox: Invalid bounds detected, skipping fitMapToBounds call');
+      } else {
+        console.log('SearchMapWithMapbox componentDidUpdate - Skipping fitMapToBounds because:', {
+          hasValidBounds,
+          boundsEqual: isEqual(bounds, currentBounds),
+          hasViewportBounds: !!this.viewportBounds
+        });
       }
     }
 
@@ -336,10 +372,13 @@ class SearchMapWithMapbox extends Component {
   }
 
   componentWillUnmount() {
-    this.currentInfoCard.markerContainer.removeEventListener(
-      'dblclick',
-      this.handleDoubleClickOnInfoCard
-    );
+    // Safety check to prevent null reference errors
+    if (this.currentInfoCard && this.currentInfoCard.markerContainer) {
+      this.currentInfoCard.markerContainer.removeEventListener(
+        'dblclick',
+        this.handleDoubleClickOnInfoCard
+      );
+    }
     document.removeEventListener('gesturestart', this.handleMobilePinchZoom, false);
     document.removeEventListener('gesturechange', this.handleMobilePinchZoom, false);
     document.removeEventListener('gestureend', this.handleMobilePinchZoom, false);
@@ -398,10 +437,22 @@ class SearchMapWithMapbox extends Component {
       this.map.addControl(nav, 'top-left');
 
       this.map.on('moveend', this.onMoveend);
+      
+      // Wait for the map style to be fully loaded before applying bounds
+      this.map.on('load', () => {
+        console.log('Mapbox map style fully loaded, now safe to apply bounds');
+        this.setState({ isMapReady: true });
+        
+        // Apply initial bounds if they exist and map is ready
+        if (this.props.bounds && this.props.bounds.ne && this.props.bounds.sw) {
+          console.log('Applying initial bounds after map load:', this.props.bounds);
+          fitMapToBounds(this.map, this.props.bounds, { padding: 0, isAutocompleteSearch: true });
+        }
+      });
 
       // Introduce rerendering after map is ready (to include labels),
       // but keep the map out of state life cycle.
-      this.setState({ isMapReady: true });
+      // Note: isMapReady is now set in the 'load' event handler above
     }
   }
 
@@ -428,6 +479,7 @@ class SearchMapWithMapbox extends Component {
       createURLToListing,
       mapComponentRefreshToken,
       config,
+      userPostcodeCenter,
     } = this.props;
 
     if (this.map) {
@@ -492,7 +544,7 @@ class SearchMapWithMapbox extends Component {
           marker: infoCard ? createMarker(infoCard, infoCardContainer) : null,
         };
       } else {
-        if (this.currentInfoCard) {
+        if (this.currentInfoCard && this.currentInfoCard.markerContainer) {
           this.currentInfoCard.markerContainer.removeEventListener(
             'dblclick',
             this.handleDoubleClickOnInfoCard
@@ -554,6 +606,14 @@ class SearchMapWithMapbox extends Component {
           currentInfoCard={this.currentInfoCard}
           config={config}
         />
+        {/* Add radius circles if user has postcode and map is ready */}
+        {this.map && this.props.userPostcodeCenter && this.state.isMapReady && (
+          <RadiusCircles
+            map={this.map}
+            center={this.props.userPostcodeCenter}
+            isVisible={true}
+          />
+        )}
       </div>
     );
   }

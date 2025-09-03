@@ -196,6 +196,7 @@ export class SearchMapComponent extends Component {
           reusableMapHiddenHandle={REUSABLE_MAP_HIDDEN_HANDLE}
           zoom={zoom}
           config={config}
+          userPostcodeCenter={this.props.userPostcodeCenter}
         />
       </ReusableMapContainer>
     ) : (

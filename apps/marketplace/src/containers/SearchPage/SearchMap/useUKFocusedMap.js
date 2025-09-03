@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useConfiguration } from '../../../context/configurationContext';
 
-// UK-focused map hook - Final Version
+// UK-focused map hook - Final Version with Radius Circles Support
 
 // UK bounds (approximate) - includes England, Scotland, Wales, and Northern Ireland
 const UK_MAP_BOUNDS = {
@@ -56,7 +56,7 @@ const createSDKBounds = (bounds) => {
 };
 
 // Calculate bounds for a postcode with radius (in miles)
-const calculatePostcodeBounds = async (postcode, radiusMiles = 10) => {
+const calculatePostcodeBounds = async (postcode, radiusMiles = 12) => {
   try {
     console.log('calculatePostcodeBounds: Starting calculation for postcode:', postcode);
     
@@ -129,51 +129,90 @@ const calculatePostcodeBounds = async (postcode, radiusMiles = 10) => {
 };
 
 /**
- * Custom hook to provide UK-focused map bounds and center
+ * Custom hook to provide UK-focused map bounds and center with radius circle support
  *
  * Behavior:
  * - ALWAYS ignore URL bounds to prevent NaN issues
- * - If user is logged in with postcode, show 10-mile radius around their location
+ * - If user is logged in with postcode, show 12-mile radius around their location
  * - Default: Show the entire UK (England, Scotland, Wales, Northern Ireland)
+ * - Returns userPostcodeCenter for drawing radius circles on the map
  *
  * @param {Object} props - Hook parameters
  * @param {Object} props.bounds - Current map bounds from URL (ignored for safety)
  * @param {Object} props.center - Current map center from URL
  * @param {Object} props.currentUser - Current logged-in user
  * @param {number} props.zoom - Current zoom level
- * @returns {Object} - Modified bounds, center, and zoom for UK focus
+ * @returns {Object} - Modified bounds, center, zoom, and userPostcodeCenter for UK focus
  */
 export const useUKFocusedMap = ({ bounds, center, currentUser, zoom }) => {
   const config = useConfiguration();
   const [userPostcodeBounds, setUserPostcodeBounds] = useState(null);
+  const [userPostcodeCenter, setUserPostcodeCenter] = useState(null);
 
   // Debug logging
   console.log('useUKFocusedMap called with:', { bounds, center, currentUser, zoom });
+  console.log('useUKFocusedMap: currentUser type:', typeof currentUser);
+  console.log('useUKFocusedMap: currentUser value:', currentUser);
+  console.log('useUKFocusedMap: currentUser attributes:', currentUser?.attributes);
+  console.log('useUKFocusedMap: currentUser profile:', currentUser?.attributes?.profile);
+  console.log('useUKFocusedMap: currentUser publicData:', currentUser?.attributes?.profile?.publicData);
 
-  // Fetch user postcode bounds when component mounts
+  // Fetch user postcode bounds when component mounts or currentUser changes
   useEffect(() => {
+    console.log('useUKFocusedMap useEffect triggered with currentUser:', currentUser);
+    
     const fetchUserPostcodeBounds = async () => {
       console.log('fetchUserPostcodeBounds: Starting...');
       console.log('fetchUserPostcodeBounds: Current user:', currentUser);
+      console.log('fetchUserPostcodeBounds: Current user type:', typeof currentUser);
+      console.log('fetchUserPostcodeBounds: Current user keys:', currentUser ? Object.keys(currentUser) : 'null');
 
-      if (currentUser && currentUser.attributes.profile.publicData) {
+      if (currentUser && currentUser.attributes && currentUser.attributes.profile && currentUser.attributes.profile.publicData) {
         const userPublicData = currentUser.attributes.profile.publicData;
         console.log('fetchUserPostcodeBounds: User public data:', userPublicData);
+        console.log('fetchUserPostcodeBounds: User public data type:', typeof userPublicData);
+        console.log('fetchUserPostcodeBounds: User public data keys:', userPublicData ? Object.keys(userPublicData) : 'null');
 
         // Check for postcode in the correct location based on console logs
         let postcode = null;
-        if (userPublicData.postcode) {
+        if (userPublicData && userPublicData.postcode) {
           postcode = userPublicData.postcode;
-        } else if (userPublicData.location?.address?.postalCode) {
+          console.log('fetchUserPostcodeBounds: Found postcode in publicData.postcode:', postcode);
+        } else if (userPublicData && userPublicData.location && userPublicData.location.address && userPublicData.location.address.postalCode) {
           postcode = userPublicData.location.address.postalCode;
+          console.log('fetchUserPostcodeBounds: Found postcode in publicData.location.address.postalCode:', postcode);
+        } else {
+          console.log('fetchUserPostcodeBounds: No postcode found in expected locations');
+          console.log('fetchUserPostcodeBounds: Available publicData keys:', userPublicData ? Object.keys(userPublicData) : 'null');
+          if (userPublicData && userPublicData.location) {
+            console.log('fetchUserPostcodeBounds: Location data:', userPublicData.location);
+          }
+          
+          // Additional debugging: log the entire user structure
+          console.log('fetchUserPostcodeBounds: Full user attributes:', currentUser.attributes);
+          console.log('fetchUserPostcodeBounds: Full user profile:', currentUser.attributes.profile);
+          console.log('fetchUserPostcodeBounds: Full user publicData:', currentUser.attributes.profile.publicData);
         }
 
         if (postcode) {
           console.log('fetchUserPostcodeBounds: User postcode found:', postcode);
           try {
-            const postcodeBounds = await calculatePostcodeBounds(postcode, 10);
+            const postcodeBounds = await calculatePostcodeBounds(postcode, 12);
             console.log('fetchUserPostcodeBounds: Postcode bounds calculated:', postcodeBounds);
-            setUserPostcodeBounds(postcodeBounds);
+            if (postcodeBounds) {
+              setUserPostcodeBounds(postcodeBounds);
+              console.log('fetchUserPostcodeBounds: Successfully set user postcode bounds');
+              
+              // Also store the center coordinates for radius circles
+              const centerCoords = {
+                lat: (postcodeBounds.ne.lat + postcodeBounds.sw.lat) / 2,
+                lng: (postcodeBounds.ne.lng + postcodeBounds.sw.lng) / 2
+              };
+              console.log('fetchUserPostcodeBounds: Center coordinates for radius circles:', centerCoords);
+              setUserPostcodeCenter(centerCoords);
+            } else {
+              console.warn('fetchUserPostcodeBounds: Postcode bounds calculation returned null');
+            }
           } catch (error) {
             console.warn('fetchUserPostcodeBounds: Failed to fetch user postcode bounds:', error);
           }
@@ -182,14 +221,31 @@ export const useUKFocusedMap = ({ bounds, center, currentUser, zoom }) => {
         }
       } else {
         console.log('fetchUserPostcodeBounds: No current user or public data');
+        if (currentUser) {
+          console.log('fetchUserPostcodeBounds: User exists but missing attributes:', {
+            hasAttributes: !!currentUser.attributes,
+            hasProfile: !!(currentUser.attributes && currentUser.attributes.profile),
+            hasPublicData: !!(currentUser.attributes && currentUser.attributes.profile && currentUser.attributes.profile.publicData)
+          });
+        }
       }
     };
 
-    fetchUserPostcodeBounds();
+    // Only fetch if we have a currentUser
+    if (currentUser) {
+      fetchUserPostcodeBounds();
+    } else {
+      console.log('useUKFocusedMap: No currentUser, clearing postcode bounds');
+      setUserPostcodeBounds(null);
+      setUserPostcodeCenter(null);
+    }
   }, [currentUser]);
 
   return useMemo(() => {
-    console.log('useUKFocusedMap useMemo executing with:', { bounds, center, userPostcodeBounds, zoom });
+    console.log('useUKFocusedMap useMemo executing with:', { bounds, center, userPostcodeBounds, userPostcodeCenter, zoom });
+    console.log('useUKFocusedMap: userPostcodeBounds type:', typeof userPostcodeBounds);
+    console.log('useUKFocusedMap: userPostcodeBounds value:', userPostcodeBounds);
+    console.log('useUKFocusedMap: userPostcodeCenter value:', userPostcodeCenter);
 
     // SAFETY: Always ignore URL bounds to prevent NaN issues
     // The URL bounds are causing the "Invalid LngLat object: (NaN, NaN)" error
@@ -201,20 +257,26 @@ export const useUKFocusedMap = ({ bounds, center, currentUser, zoom }) => {
     if (userPostcodeBounds) {
       console.log('useUKFocusedMap: Using user postcode bounds:', userPostcodeBounds);
       const sdkBounds = createSDKBounds(userPostcodeBounds);
+      console.log('useUKFocusedMap: Created SDK bounds:', sdkBounds);
 
       if (sdkBounds) {
         const result = {
           bounds: sdkBounds,
-          center: {
+          center: userPostcodeCenter || {
             lat: (userPostcodeBounds.ne.lat + userPostcodeBounds.sw.lat) / 2,
             lng: (userPostcodeBounds.ne.lng + userPostcodeBounds.sw.lng) / 2
           },
-          zoom: 10 // Zoom level for ~10 mile radius
+          zoom: 9, // Zoom level for ~12 mile radius (slightly more zoomed out)
+          userPostcodeCenter: userPostcodeCenter // Add center coordinates for radius circles
         };
 
         console.log('useUKFocusedMap: Returning user postcode result:', result);
         return result;
+      } else {
+        console.warn('useUKFocusedMap: Failed to create SDK bounds from user postcode bounds');
       }
+    } else {
+      console.log('useUKFocusedMap: No user postcode bounds available, will use default UK bounds');
     }
 
     // Default: Show UK
@@ -228,7 +290,8 @@ export const useUKFocusedMap = ({ bounds, center, currentUser, zoom }) => {
           lat: (UK_MAP_BOUNDS.ne.lat + UK_MAP_BOUNDS.sw.lat) / 2,
           lng: (UK_MAP_BOUNDS.ne.lng + UK_MAP_BOUNDS.sw.lng) / 2
         },
-        zoom: 5 // Zoom level to show most of the UK
+        zoom: 5, // Zoom level to show most of the UK
+        userPostcodeCenter: null // No user postcode center for default UK view
       };
 
       console.log('useUKFocusedMap: Returning default UK result:', result);
@@ -237,6 +300,6 @@ export const useUKFocusedMap = ({ bounds, center, currentUser, zoom }) => {
 
     // Fallback: return null bounds to let the map handle it
     console.warn('useUKFocusedMap: Failed to create valid bounds, returning null');
-    return { bounds: null, center: null, zoom: null };
-  }, [bounds, center, userPostcodeBounds, zoom]);
+    return { bounds: null, center: null, zoom: null, userPostcodeCenter: null };
+  }, [bounds, center, userPostcodeBounds, userPostcodeCenter, zoom]);
 };

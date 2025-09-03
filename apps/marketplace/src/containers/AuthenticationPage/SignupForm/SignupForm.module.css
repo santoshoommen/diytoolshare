@@ -47,3 +47,68 @@
 .bottomWrapper {
   composes: marketplaceModalBottomWrapper from global;
 }
+
+/* Make the console-configured postcode field look like a single-line text input */
+.postcodeField textarea {
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  resize: none !important;
+  overflow: hidden !important;
+  line-height: 1.2 !important;
+  padding: 12px 16px !important;
+  font-size: 16px !important;
+  border-radius: 4px !important;
+  border: 1px solid #d1d5db !important;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background-color: #ffffff !important;
+  color: #374151 !important;
+  font-family: inherit !important;
+}
+
+.postcodeField textarea:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.postcodeField textarea:hover {
+  border-color: #9ca3af !important;
+}
+
+.postcodeField textarea::placeholder {
+  color: #9ca3af !important;
+  font-size: 16px !important;
+}
+
+/* Ensure the field container has proper spacing */
+.postcodeField {
+  margin-bottom: 16px;
+}
+
+/* Make sure the label is properly styled */
+.postcodeField label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+/* Style any error messages */
+.postcodeField .error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Style any help text */
+.postcodeField .help {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
