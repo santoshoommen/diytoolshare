@@ -61,7 +61,13 @@ const calculatePostcodeBounds = async (postcode, radiusMiles = 12) => {
     console.log('calculatePostcodeBounds: Starting calculation for postcode:', postcode);
     
     // Get actual postcode coordinates from our API
-    const response = await fetch('http://localhost:4000/api/postcode/validate', {
+    // Use environment variable for API URL, fallback to localhost for development
+    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
+    const apiUrl = `${apiBaseUrl}/api/postcode/validate`;
+    
+    console.log('calculatePostcodeBounds: Using API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

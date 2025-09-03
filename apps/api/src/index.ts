@@ -36,7 +36,12 @@ if (process.env.NODE_ENV !== 'production') {
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3500'],
+  origin: [
+    'http://localhost:3000', 
+    'http://localhost:3500',
+    // Add your production marketplace domain here
+    process.env.MARKETPLACE_PRODUCTION_URL || 'https://www.diy-toolshare.co.uk'
+  ].filter(Boolean), // Remove any undefined values
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
