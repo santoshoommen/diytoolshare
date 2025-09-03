@@ -35,17 +35,36 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Middleware
 app.use(helmet());
+
+// Debug environment variable
+console.log('🔍 CORS Debug - MARKETPLACE_PRODUCTION_URL:', process.env.MARKETPLACE_PRODUCTION_URL);
+console.log('🔍 CORS Debug - NODE_ENV:', process.env.NODE_ENV);
+
+// Configure CORS with better debugging
+const corsOrigins: string[] = [
+  'http://localhost:3000', 
+  'http://localhost:3500'
+];
+
+// Add production URL if environment variable is set
+if (process.env.MARKETPLACE_PRODUCTION_URL) {
+  corsOrigins.push(process.env.MARKETPLACE_PRODUCTION_URL);
+  console.log('✅ Added production marketplace URL to CORS:', process.env.MARKETPLACE_PRODUCTION_URL);
+} else {
+  console.log('⚠️  No MARKETPLACE_PRODUCTION_URL environment variable found');
+}
+
+console.log('🔍 Final CORS origins:', corsOrigins);
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'http://localhost:3500',
-    // Add your production marketplace domain here
-    process.env.MARKETPLACE_PRODUCTION_URL || 'https://www.diy-toolshare.co.uk'
-  ].filter(Boolean), // Remove any undefined values
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Handle CORS preflight requests explicitly
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
