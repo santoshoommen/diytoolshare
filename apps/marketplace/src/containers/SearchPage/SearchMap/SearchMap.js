@@ -8,6 +8,7 @@ import { createResourceLocatorString } from '../../../util/routes';
 import { createSlug } from '../../../util/urlHelpers';
 import { propTypes } from '../../../util/types';
 import { obfuscatedCoordinates, getMapProviderApiAccess } from '../../../util/maps';
+import { useUKFocusedMap } from './useUKFocusedMap';
 
 import { hasParentWithClassName } from './SearchMap.helpers.js';
 import * as searchMapMapbox from './SearchMapWithMapbox';
@@ -227,12 +228,36 @@ const SearchMap = props => {
   const config = useConfiguration();
   const routeConfiguration = useRouteConfiguration();
   const history = useHistory();
+  
+  // Apply UK-focused map behavior
+  const ukFocusedProps = useUKFocusedMap({
+    bounds: props.bounds,
+    center: props.center,
+    currentUser: props.currentUser,
+    zoom: props.zoom
+  });
+  
+  console.log('SearchMap - Original props:', props);
+  console.log('SearchMap - UK focused props:', ukFocusedProps);
+  
+  // Create final props with UK-focused bounds completely overriding original bounds
+  const finalProps = {
+    ...props,
+    ...ukFocusedProps,
+    // Ensure bounds are completely overridden to prevent NaN issues
+    bounds: ukFocusedProps.bounds || null,
+    center: ukFocusedProps.center || props.center,
+    zoom: ukFocusedProps.zoom || props.zoom
+  };
+  
+  console.log('SearchMap - Final props being passed:', finalProps);
+  
   return (
     <SearchMapComponent
       config={config}
       routeConfiguration={routeConfiguration}
       history={history}
-      {...props}
+      {...finalProps}
     />
   );
 };

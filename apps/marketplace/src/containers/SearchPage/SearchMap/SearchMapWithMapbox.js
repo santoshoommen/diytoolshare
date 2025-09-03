@@ -34,6 +34,13 @@ export const fitMapToBounds = (map, bounds, options) => {
 
   // map bounds as string literal for google.maps
   const mapBounds = sdkBoundsToMapboxBounds(bounds);
+  
+  // If bounds conversion failed due to invalid coordinates, don't try to fit bounds
+  if (!mapBounds) {
+    console.warn('fitMapToBounds: Invalid bounds detected, skipping bounds fitting');
+    return;
+  }
+  
   const paddingOptionMaybe = padding == null ? { padding } : {};
   const eventData = isAutocompleteSearch ? { searchSource: SOURCE_AUTOCOMPLETE } : {};
 
@@ -95,12 +102,26 @@ const sdkBoundsToMapboxBounds = bounds => {
   }
   const { ne, sw } = bounds;
 
+  // Handle both SDK objects with lat()/lng() methods and our custom bounds format
+  const neLat = typeof ne.lat === 'function' ? ne.lat() : ne.lat;
+  const neLng = typeof ne.lng === 'function' ? ne.lng() : ne.lng;
+  const swLat = typeof sw.lat === 'function' ? sw.lat() : sw.lat;
+  const swLng = typeof sw.lng === 'function' ? sw.lng() : sw.lng;
+
+  // Validate coordinates to prevent NaN errors
+  if (typeof neLat !== 'number' || typeof neLng !== 'number' || 
+      typeof swLat !== 'number' || typeof swLng !== 'number' ||
+      isNaN(neLat) || isNaN(neLng) || isNaN(swLat) || isNaN(swLng)) {
+    console.warn('sdkBoundsToMapboxBounds: Invalid coordinates detected:', { neLat, neLng, swLat, swLng });
+    return null;
+  }
+
   // if sw lng is > ne lng => the bounds overlap antimeridian
   // => flip the nw lng to the negative side so that the value
   // is less than -180
-  const swLng = sw.lng > ne.lng ? -360 + sw.lng : sw.lng;
+  const adjustedSwLng = swLng > neLng ? -360 + swLng : swLng;
 
-  return [[swLng, sw.lat], [ne.lng, ne.lat]];
+  return [[adjustedSwLng, swLat], [neLng, neLat]];
 };
 
 /**
@@ -283,11 +304,22 @@ class SearchMapWithMapbox extends Component {
     if (this.map) {
       const currentBounds = getMapBounds(this.map);
 
-      // Do not call fitMapToBounds if bounds are the same.
+      // Additional safety check: ensure bounds are valid before calling fitMapToBounds
+      const bounds = this.props.bounds;
+      const hasValidBounds = bounds && 
+        bounds.ne && bounds.sw && 
+        (typeof bounds.ne.lat === 'function' ? bounds.ne.lat() : bounds.ne.lat) &&
+        (typeof bounds.ne.lng === 'function' ? bounds.ne.lng() : bounds.ne.lng) &&
+        (typeof bounds.sw.lat === 'function' ? bounds.sw.lat() : bounds.sw.lat) &&
+        (typeof bounds.sw.lng === 'function' ? bounds.sw.lng() : bounds.sw.lng);
+
+      // Do not call fitMapToBounds if bounds are the same or invalid.
       // Our bounds are viewport bounds, and fitBounds will try to add margins around those bounds
       // that would result to zoom-loop (bound change -> fitmap -> bounds change -> ...)
-      if (!isEqual(this.props.bounds, currentBounds) && !this.viewportBounds) {
-        fitMapToBounds(this.map, this.props.bounds, { padding: 0, isAutocompleteSearch: true });
+      if (hasValidBounds && !isEqual(bounds, currentBounds) && !this.viewportBounds) {
+        fitMapToBounds(this.map, bounds, { padding: 0, isAutocompleteSearch: true });
+      } else if (!hasValidBounds) {
+        console.warn('SearchMapWithMapbox: Invalid bounds detected, skipping fitMapToBounds call');
       }
     }
 

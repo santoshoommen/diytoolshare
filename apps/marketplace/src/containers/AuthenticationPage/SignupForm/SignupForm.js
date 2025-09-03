@@ -204,11 +204,49 @@ const SignupFormComponent = props => (
                 placeholder={intl.formatMessage({
                   id: 'SignupForm.postcodePlaceholder',
                 })}
-                validate={validators.required(
-                  intl.formatMessage({
-                    id: 'SignupForm.postcodeRequired',
-                  })
-                )}
+                validate={async (value) => {
+                  // First check if required
+                  const requiredError = validators.required(
+                    intl.formatMessage({
+                      id: 'SignupForm.postcodeRequired',
+                    })
+                  )(value);
+                  
+                  if (requiredError) {
+                    return requiredError;
+                  }
+
+                  // Then validate UK postcode format
+                  const UK_POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i;
+                  if (!UK_POSTCODE_REGEX.test(value)) {
+                    return 'Please enter a valid UK postcode format (e.g., SW1A 1AA)';
+                  }
+
+                  // Finally validate with API
+                  try {
+                    const response = await fetch('http://localhost:4000/api/postcode/validate', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ postcode: value }),
+                    });
+
+                    if (!response.ok) {
+                      const errorData = await response.json();
+                      return errorData.message || 'Invalid UK postcode';
+                    }
+
+                    const result = await response.json();
+                    if (!result.isValid) {
+                      return result.message || 'Invalid UK postcode';
+                    }
+
+                    return undefined; // No error
+                  } catch (error) {
+                    return 'Unable to validate postcode. Please try again.';
+                  }
+                }}
               />
             </div>
           ) : null}

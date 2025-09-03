@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import * as postcodeController from '../controllers/postcodeController';
-import { validateUKPostcodeMiddleware } from '../middleware/ukValidation';
+import { 
+  validateUKPostcodeMiddleware,
+  requireUKPostcodeMiddleware 
+} from '../middleware/postcodesIoValidation';
 
 const router: Router = Router();
 
@@ -9,14 +12,14 @@ const router: Router = Router();
  * @desc    Validate a UK postcode
  * @access  Public
  */
-router.post('/validate', postcodeController.validatePostcode);
+router.post('/validate', validateUKPostcodeMiddleware, postcodeController.validatePostcode);
 
 /**
  * @route   POST /api/postcode/region
  * @desc    Check if postcode is in a specific region
  * @access  Public
  */
-router.post('/region', postcodeController.checkPostcodeRegion);
+router.post('/region', validateUKPostcodeMiddleware, postcodeController.checkPostcodeRegion);
 
 /**
  * @route   POST /api/postcode/distance

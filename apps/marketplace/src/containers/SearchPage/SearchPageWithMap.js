@@ -676,6 +676,7 @@ export class SearchPageComponent extends Component {
                   activeListingId={activeListingId}
                   bounds={bounds}
                   center={origin}
+                  currentUser={currentUser}
                   isSearchMapOpenOnMobile={this.state.isSearchMapOpenOnMobile}
                   location={location}
                   listings={listings || []}

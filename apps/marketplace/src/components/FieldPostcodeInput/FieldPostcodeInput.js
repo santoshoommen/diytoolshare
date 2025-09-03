@@ -49,19 +49,50 @@ const FieldPostcodeInputComponent = props => {
 
   // UK postcode validation function
   const validateUKPostcode = async (postcode) => {
-    if (!postcode || postcode.length < 5) {
+    if (!postcode || typeof postcode !== 'string') {
+      return null;
+    }
+
+    const trimmedPostcode = postcode.trim();
+    if (trimmedPostcode.length < 5) {
       return null;
     }
 
     setIsValidating(true);
+    
     try {
-      const response = await fetch('/api/postcode/validate', {
+      // First do basic format validation
+      const UK_POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i;
+      
+      if (!UK_POSTCODE_REGEX.test(trimmedPostcode)) {
+        const result = {
+          isValid: false,
+          error: 'Invalid UK postcode format. Please enter a valid UK postcode (e.g., SW1A 1AA)',
+          message: 'Invalid UK postcode format. Please enter a valid UK postcode (e.g., SW1A 1AA)'
+        };
+        setValidationResult(result);
+        return result;
+      }
+
+      // Call the API validation service
+      const response = await fetch('http://localhost:4000/api/postcode/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ postcode }),
+        body: JSON.stringify({ postcode: trimmedPostcode }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const result = {
+          isValid: false,
+          error: errorData.message || 'Validation failed',
+          message: errorData.message || 'Validation failed'
+        };
+        setValidationResult(result);
+        return result;
+      }
 
       const result = await response.json();
       setValidationResult(result);
@@ -73,25 +104,19 @@ const FieldPostcodeInputComponent = props => {
       return result;
     } catch (error) {
       console.error('Postcode validation error:', error);
-      setValidationResult({ isValid: false, error: 'Validation failed' });
-      return null;
+      const result = { 
+        isValid: false, 
+        error: 'Validation service unavailable. Please try again.',
+        message: 'Validation service unavailable. Please try again.'
+      };
+      setValidationResult(result);
+      return result;
     } finally {
       setIsValidating(false);
     }
   };
 
-  // Debounced validation
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (input.value) {
-        validateUKPostcode(input.value);
-      } else {
-        setValidationResult(null);
-      }
-    }, 500);
 
-    return () => clearTimeout(timeoutId);
-  }, [input.value]);
 
   // UK postcode suggestions
   const ukPostcodeSuggestions = [
@@ -125,6 +150,14 @@ const FieldPostcodeInputComponent = props => {
   const handleInputBlur = () => {
     // Delay hiding suggestions to allow for clicks
     setTimeout(() => setSuggestions([]), 200);
+    
+    // Validate postcode on blur
+    if (input.value && input.value.trim().length >= 5) {
+      validateUKPostcode(input.value);
+    } else if (input.value && input.value.trim().length > 0) {
+      // Clear validation result for incomplete postcodes
+      setValidationResult(null);
+    }
   };
 
   return (

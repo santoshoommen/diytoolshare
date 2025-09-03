@@ -6,6 +6,8 @@ import * as branding from './configBranding';
 import * as layout from './configLayout';
 import * as analytics from './configAnalytics';
 import * as user from './configUser';
+import ukConfig from './configUK';
+
 
 // NOTE: only expose configuration that should be visible in the
 // client side, don't add any server secrets to this file.
@@ -20,7 +22,7 @@ const defaultConfig = {
   // It should match one of the currencies listed in currencySettings.js
   // Note: The currency comes from localization asset nowadays by default.
   //       To use this built-in configuration, you need to remove the overwrite from configHelper.js (mergeCurrency func)
-  currency: 'USD',
+  currency: 'GBP', // UK-focused marketplace - British Pound
 
   // Listing minimum price in currency sub units, e.g. cents.
   // By default, always try to take the value of listingMinimumPriceSubUnits from the transaction-size.json asset.
@@ -60,6 +62,11 @@ const defaultConfig = {
   // By default, it doesn't add anything.
   analytics,
 
+  // UK-specific configuration
+  uk: ukConfig,
+
+
+
   // Note: Facebook app id is used for Facebook login, but it is also used for tracking:
   // Facebook counts shares with app or page associated by this id
   // Currently it is unset, but you can read more about fb:app_id from
@@ -72,7 +79,7 @@ const defaultConfig = {
   // Note: The localization comes from localization asset nowadays by default.
   //       To use this built-in configuration, you need to remove the overwrite from configHelper.js (mergeLocalizations func)
   localization: {
-    locale: 'en-US',
+    locale: 'en-GB', // UK English for UK-focused marketplace
     // First day of week
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/getWeekInfo#return_value
     // 1: Monday

@@ -34,293 +34,10 @@ at https://stripe.com/global
 You can find the bank account formats from https://stripe.com/docs/connect/payouts-bank-accounts
 */
 
+// UK-focused marketplace with international support for payments
 export const supportedCountries = [
   {
-    //Australia
-    code: 'AU',
-    currency: 'AUD',
-    accountConfig: {
-      bsb: true,
-      accountNumber: true,
-    },
-  },
-  {
-    // Austria
-    code: 'AT',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Belgium
-    code: 'BE',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    //Bulgraia
-    code: 'BG',
-    currency: 'BGN',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Canada
-    code: 'CA',
-    currency: 'CAD',
-    accountConfig: {
-      transitNumber: true,
-      institutionNumber: true,
-      accountNumber: true,
-    },
-  },
-  {
-    //Cyprus
-    code: 'CY',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    //	Czech Republic
-    code: 'CZ',
-    currency: 'CZK',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Denmark
-    code: 'DK',
-    currency: 'DKK',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Estionia
-    code: 'EE',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Finland
-    code: 'FI',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // France
-    code: 'FR',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Germany
-    code: 'DE',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Greece
-    code: 'GR',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Hong Kong
-    code: 'HK',
-    currency: 'HKD',
-    accountConfig: {
-      clearingCode: true,
-      branchCode: true,
-      accountNumber: true,
-    },
-  },
-  {
-    // Ireland
-    code: 'IE',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Italy
-    code: 'IT',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Japan
-    code: 'JP',
-    currency: 'JPY',
-    accountConfig: {
-      bankName: true,
-      branchName: true,
-      bankCode: true,
-      branchCode: true,
-      accountNumber: true,
-      accountOwnerName: true,
-    },
-  },
-  {
-    // Latvia
-    code: 'LV',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Lithuania
-    code: 'LT',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Luxembourg
-    code: 'LU',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Malta
-    code: 'MT',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Mexico
-    code: 'MX',
-    currency: 'MXN',
-    accountConfig: {
-      clabe: true,
-    },
-  },
-  {
-    // Netherlands
-    code: 'NL',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // New Zealand
-    code: 'NZ',
-    currency: 'NZD',
-    accountConfig: {
-      accountNumber: true,
-    },
-  },
-  {
-    // Norway
-    code: 'NO',
-    currency: 'NOK',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Poland
-    code: 'PL',
-    currency: 'PLN',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Portugal
-    code: 'PT',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Romania
-    code: 'RO',
-    currency: 'RON',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Singapore
-    code: 'SG',
-    currency: 'SGD',
-    accountConfig: {
-      bankCode: true,
-      branchCode: true,
-      accountNumber: true,
-    },
-  },
-  {
-    // Slovakia
-    code: 'SK',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Slovenia
-    code: 'SI',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Spain
-    code: 'ES',
-    currency: 'EUR',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Sweden
-    code: 'SE',
-    currency: 'SEK',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // Switzerland
-    code: 'CH',
-    currency: 'CHF',
-    accountConfig: {
-      iban: true,
-    },
-  },
-  {
-    // United Kingdom
+    // United Kingdom (Primary)
     code: 'GB',
     currency: 'GBP',
     accountConfig: {
@@ -334,6 +51,50 @@ export const supportedCountries = [
     currency: 'USD',
     accountConfig: {
       routingNumber: true,
+      accountNumber: true,
+    },
+  },
+  {
+    // Canada
+    code: 'CA',
+    currency: 'CAD',
+    accountConfig: {
+      transitNumber: true,
+      institutionNumber: true,
+      accountNumber: true,
+    },
+  },
+  {
+    // Australia
+    code: 'AU',
+    currency: 'AUD',
+    accountConfig: {
+      bsbCode: true,
+      accountNumber: true,
+    },
+  },
+  {
+    // European Union countries
+    code: 'DE',
+    currency: 'EUR',
+    accountConfig: {
+      bankCode: true,
+      accountNumber: true,
+    },
+  },
+  {
+    code: 'FR',
+    currency: 'EUR',
+    accountConfig: {
+      bankCode: true,
+      accountNumber: true,
+    },
+  },
+  {
+    code: 'IE',
+    currency: 'EUR',
+    accountConfig: {
+      bankCode: true,
       accountNumber: true,
     },
   },

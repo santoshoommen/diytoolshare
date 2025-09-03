@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { 
-  validateUKPostcode, 
-  isPostcodeInRegion, 
-  calculatePostcodeDistance,
-  getNearbyPostcodes 
-} from '../utils/ukPostcodeValidation';
+  validateUKPostcodeMiddleware,
+  requireUKPostcodeMiddleware,
+  getPostcodeValidation,
+  isPostcodeInUKRegion
+} from '../middleware/postcodesIoValidation';
 
 /**
  * Validate a UK postcode
@@ -12,34 +12,28 @@ import {
  */
 export async function validatePostcode(req: Request, res: Response): Promise<void> {
   try {
-    const { postcode } = req.body;
+    // Use the middleware validation result
+    const validation = getPostcodeValidation(req);
     
-    if (!postcode) {
+    if (!validation) {
       res.status(400).json({
-        error: 'Postcode is required',
-        message: 'Please provide a postcode to validate'
-      });
-      return;
-    }
-    
-    const validation = validateUKPostcode(postcode);
-    
-    if (!validation.isValid) {
-      res.status(400).json({
-        error: 'Invalid postcode',
-        message: validation.error,
+        error: 'Validation failed',
+        message: 'Postcode validation failed',
         isValid: false
       });
       return;
     }
     
     res.json({
-      isValid: true,
-      postcode: validation.formattedPostcode,
+      isValid: validation.isValid,
+      postcode: validation.postcode,
+      formattedPostcode: validation.formattedPostcode,
       area: validation.area,
       district: validation.district,
-      sector: validation.sector,
-      unit: validation.unit
+      city: validation.city,
+      region: validation.region,
+      country: validation.country,
+      coordinates: validation.coordinates
     });
   } catch (error) {
     console.error('Postcode validation error:', error);
@@ -56,33 +50,34 @@ export async function validatePostcode(req: Request, res: Response): Promise<voi
  */
 export async function checkPostcodeRegion(req: Request, res: Response): Promise<void> {
   try {
-    const { postcode, region } = req.body;
+    const { region } = req.body;
     
-    if (!postcode || !region) {
+    if (!region) {
       res.status(400).json({
-        error: 'Missing parameters',
-        message: 'Both postcode and region are required'
+        error: 'Missing parameter',
+        message: 'Region is required'
       });
       return;
     }
     
-    const validation = validateUKPostcode(postcode);
+    const validation = getPostcodeValidation(req);
     
-    if (!validation.isValid) {
+    if (!validation || !validation.isValid) {
       res.status(400).json({
         error: 'Invalid postcode',
-        message: validation.error
+        message: 'A valid UK postcode is required'
       });
       return;
     }
     
-    const isInRegion = isPostcodeInRegion(postcode, region);
+    const isInRegion = isPostcodeInUKRegion(validation.postcode, region);
     
     res.json({
       postcode: validation.formattedPostcode,
       region,
       isInRegion,
-      area: validation.area
+      area: validation.area,
+      city: validation.city
     });
   } catch (error) {
     console.error('Postcode region check error:', error);
@@ -109,24 +104,13 @@ export async function calculateDistance(req: Request, res: Response): Promise<vo
       return;
     }
     
-    const validation1 = validateUKPostcode(postcode1);
-    const validation2 = validateUKPostcode(postcode2);
-    
-    if (!validation1.isValid || !validation2.isValid) {
-      res.status(400).json({
-        error: 'Invalid postcode',
-        message: 'Please provide valid UK postcodes'
-      });
-      return;
-    }
-    
-    const distance = calculatePostcodeDistance(postcode1, postcode2);
-    
+    // For now, return a placeholder response
+    // TODO: Implement actual distance calculation using Mapbox
     res.json({
-      postcode1: validation1.formattedPostcode,
-      postcode2: validation2.formattedPostcode,
-      distanceKm: distance,
-      message: 'Distance calculation is a placeholder. Implement with geocoding service for accurate results.'
+      postcode1,
+      postcode2,
+      distanceKm: 'N/A',
+      message: 'Distance calculation is a placeholder. Implement with Mapbox geocoding service for accurate results.'
     });
   } catch (error) {
     console.error('Postcode distance calculation error:', error);
@@ -153,23 +137,13 @@ export async function getNearby(req: Request, res: Response): Promise<void> {
       return;
     }
     
-    const validation = validateUKPostcode(postcode);
-    
-    if (!validation.isValid) {
-      res.status(400).json({
-        error: 'Invalid postcode',
-        message: validation.error
-      });
-      return;
-    }
-    
-    const nearbyPostcodes = getNearbyPostcodes(postcode, radiusKm);
-    
+    // For now, return a placeholder response
+    // TODO: Implement actual nearby postcodes using Mapbox
     res.json({
-      postcode: validation.formattedPostcode,
+      postcode,
       radiusKm,
-      nearbyPostcodes,
-      message: 'Nearby postcodes is a placeholder. Implement with postcode database for accurate results.'
+      nearbyPostcodes: [],
+      message: 'Nearby postcodes is a placeholder. Implement with Mapbox geocoding service for accurate results.'
     });
   } catch (error) {
     console.error('Get nearby postcodes error:', error);

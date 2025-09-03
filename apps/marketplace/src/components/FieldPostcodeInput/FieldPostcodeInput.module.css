@@ -5,6 +5,10 @@
   /* Layout */
   display: flex;
   flex-direction: column;
+  
+  /* Prevent layout shifts */
+  contain: layout style;
+  min-height: fit-content;
 }
 
 .root label {
@@ -24,6 +28,13 @@
   position: relative;
   display: flex;
   align-items: center;
+  
+  /* Prevent layout shifts */
+  min-height: 48px;
+  width: 100%;
+  
+  /* Ensure stable positioning for background images */
+  contain: layout style;
 }
 
 .input {
@@ -40,9 +51,17 @@
   border: 1px solid var(--matterColorNegative);
   border-radius: 4px;
   background-color: var(--matterColorLight);
-
-  /* Transition */
-  transition: all 0.2s ease-in-out;
+  
+  /* Prevent layout shifts */
+  box-sizing: border-box;
+  min-height: 48px; /* Ensure consistent height */
+  
+  /* Smooth transitions only for specific properties */
+  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  
+  /* Prevent any size changes */
+  resize: none;
+  overflow: visible;
 }
 
 .input:focus {
@@ -66,6 +85,8 @@
   background-color: rgba(0, 0, 255, 0.05);
 }
 
+
+
 .spinnerWrapper {
   position: absolute;
   right: 12px;
@@ -74,6 +95,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  
+  /* Prevent layout shifts */
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
 }
 
 .spinner {
@@ -81,6 +107,10 @@
   height: 16px;
   color: var(--marketplaceColor);
 }
+
+
+
+
 
 .validIcon {
   position: absolute;
@@ -95,6 +125,9 @@
   color: var(--marketplaceColor);
   font-weight: bold;
   font-size: 14px;
+  
+  /* Prevent layout shifts */
+  pointer-events: none;
 }
 
 .suggestions {
@@ -127,10 +160,16 @@
   border-bottom: none;
 }
 
+
+
 .validationMessage {
   margin-top: 4px;
   font-size: 12px;
   color: var(--failColor);
+  
+  /* Prevent layout shifts */
+  min-height: 16px;
+  line-height: 1.2;
 }
 
 .regionInfo {
@@ -138,6 +177,10 @@
   font-size: 12px;
   color: var(--marketplaceColor);
   font-weight: 500;
+  
+  /* Prevent layout shifts */
+  min-height: 16px;
+  line-height: 1.2;
 }
 
 /* Responsive design */
@@ -155,4 +198,17 @@
   .suggestions {
     max-height: 150px;
   }
+}
+
+/* Prevent layout shifts on all screen sizes */
+.root {
+  /* Ensure stable dimensions */
+  min-height: fit-content;
+  
+  /* Prevent any overflow that could cause layout shifts */
+  overflow: visible;
+  
+  /* Use transform3d to create a new stacking context */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
