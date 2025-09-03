@@ -40,7 +40,7 @@ app.use(helmet());
 console.log('🔍 CORS Debug - MARKETPLACE_PRODUCTION_URL:', process.env.MARKETPLACE_PRODUCTION_URL);
 console.log('🔍 CORS Debug - NODE_ENV:', process.env.NODE_ENV);
 
-// Configure CORS with better debugging
+// Configure CORS with better debugging and more flexible origin handling
 const corsOrigins: string[] = [
   'http://localhost:3000', 
   'http://localhost:3500'
@@ -56,8 +56,34 @@ if (process.env.MARKETPLACE_PRODUCTION_URL) {
 
 console.log('🔍 Final CORS origins:', corsOrigins);
 
+// More flexible CORS configuration
 app.use(cors({
-  origin: corsOrigins,
+  origin: (origin, callback) => {
+    console.log('🔍 CORS Request Origin:', origin);
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      console.log('✅ Allowing request with no origin');
+      return callback(null, true);
+    }
+    
+    // Check if origin is in our allowed list
+    if (corsOrigins.includes(origin)) {
+      console.log('✅ Origin allowed:', origin);
+      return callback(null, true);
+    }
+    
+    // Check for subdomain variations
+    const baseDomain = process.env.MARKETPLACE_PRODUCTION_URL?.replace(/^https?:\/\//, '');
+    if (baseDomain && origin.includes(baseDomain)) {
+      console.log('✅ Subdomain variation allowed:', origin);
+      return callback(null, true);
+    }
+    
+    console.log('❌ Origin not allowed:', origin);
+    console.log('❌ Allowed origins:', corsOrigins);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

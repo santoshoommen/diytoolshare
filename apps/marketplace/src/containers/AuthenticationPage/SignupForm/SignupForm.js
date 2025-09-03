@@ -369,7 +369,8 @@ const SignupForm = props => {
         // Function to validate postcode with API
         const validatePostcodeWithAPI = async (postcode) => {
           try {
-            const response = await fetch('http://localhost:4000/api/postcode/validate', {
+            const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
+            const response = await fetch(`${apiBaseUrl}/api/postcode/validate`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
