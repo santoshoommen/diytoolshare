@@ -346,9 +346,19 @@ const SignupForm = props => {
           if (form) {
             const submitButton = form.querySelector('button[type="submit"]');
             if (submitButton) {
-              submitButton.disabled = !isPostcodeValid;
-              if (!isPostcodeValid) {
-                submitButton.title = 'Please enter a valid UK postcode to continue';
+              // Check both postcode validity AND terms checkbox
+              const termsCheckbox = form.querySelector('input[name="terms"]');
+              const isTermsAccepted = termsCheckbox && termsCheckbox.checked;
+              
+              const shouldEnableButton = isPostcodeValid && isTermsAccepted;
+              submitButton.disabled = !shouldEnableButton;
+              
+              if (!shouldEnableButton) {
+                if (!isPostcodeValid) {
+                  submitButton.title = 'Please enter a valid UK postcode to continue';
+                } else if (!isTermsAccepted) {
+                  submitButton.title = 'Please accept the terms and conditions to continue';
+                }
                 submitButton.style.opacity = '0.6';
                 submitButton.style.cursor = 'not-allowed';
               } else {
@@ -535,6 +545,14 @@ const SignupForm = props => {
               return;
             }
           });
+
+          // Add event listener for terms checkbox changes
+          const termsCheckbox = form.querySelector('input[name="terms"]');
+          if (termsCheckbox) {
+            termsCheckbox.addEventListener('change', () => {
+              updateSubmitButtonState();
+            });
+          }
         }
 
         console.log('SignupForm: Successfully set up postcode field with validation');
