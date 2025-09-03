@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 /**
  * Component to draw radius circles on the map
  * Shows 3, 5, and 10-mile radius circles around the user's postcode
+ * Creates a layered opacity effect for visual hierarchy
  */
 const RadiusCircles = ({ map, center, isVisible = false }) => {
   const circlesRef = useRef([]);
@@ -24,11 +25,11 @@ const RadiusCircles = ({ map, center, isVisible = false }) => {
     const latDelta = (miles) => miles / 69; // 1 degree latitude ≈ 69 miles
     const lngDelta = (miles) => miles / (69 * Math.cos(center.lat * Math.PI / 180));
 
-    // Define the three radius circles (3, 5, and 10 miles)
+    // Define the three radius circles with layered opacity effect
     const radiusConfigs = [
-      { miles: 3, color: '#3B82F6', opacity: 0.3, width: 2 },   // Blue - 3 miles
-      { miles: 5, color: '#10B981', opacity: 0.25, width: 2 },   // Green - 5 miles
-      { miles: 10, color: '#EF4444', opacity: 0.2, width: 2 }    // Red - 10 miles
+      { miles: 3, color: '#3B82F6', opacity: 0.2, width: 1, fillOpacity: 0.05 },    // Blue - 3 miles (very subtle)
+      { miles: 5, color: '#10B981', opacity: 0.3, width: 2, fillOpacity: 0.1 },    // Green - 5 miles (slight opacity)
+      { miles: 10, color: '#EF4444', opacity: 0.5, width: 2, fillOpacity: 0.2 }    // Red - 10 miles (more opacity)
     ];
 
     // Remove existing circles first
@@ -40,9 +41,10 @@ const RadiusCircles = ({ map, center, isVisible = false }) => {
     });
     circlesRef.current = [];
 
-    // Create new circles
+    // Create new circles with fill areas for opacity overlay
     radiusConfigs.forEach((config, index) => {
       const circleId = `radius-circle-${config.miles}`;
+      const fillId = `radius-fill-${config.miles}`;
       
       // Calculate circle coordinates
       const latDeltaVal = latDelta(config.miles);
@@ -79,7 +81,39 @@ const RadiusCircles = ({ map, center, isVisible = false }) => {
         }
       });
 
-      // Add the circle layer to the map
+      // Add the fill source for opacity overlay
+      if (map.getSource(fillId)) {
+        map.removeSource(fillId);
+      }
+      
+      map.addSource(fillId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'Polygon',
+            coordinates: [points] // Note: Polygon needs array of arrays
+          }
+        }
+      });
+
+      // Add the fill layer first (so it appears behind the line)
+      if (map.getLayer(fillId)) {
+        map.removeLayer(fillId);
+      }
+      
+      map.addLayer({
+        id: fillId,
+        type: 'fill',
+        source: fillId,
+        paint: {
+          'fill-color': config.color,
+          'fill-opacity': config.fillOpacity
+        }
+      });
+
+      // Add the circle line layer on top
       if (map.getLayer(circleId)) {
         map.removeLayer(circleId);
       }
@@ -99,11 +133,14 @@ const RadiusCircles = ({ map, center, isVisible = false }) => {
         }
       });
 
-      // Store reference to the circle
+      // Store reference to both the circle and fill
       circlesRef.current.push({
         id: circleId,
+        fillId: fillId,
         source: map.getSource(circleId),
-        layer: map.getLayer(circleId)
+        fillSource: map.getSource(fillId),
+        layer: map.getLayer(circleId),
+        fillLayer: map.getLayer(fillId)
       });
     });
 
@@ -111,8 +148,20 @@ const RadiusCircles = ({ map, center, isVisible = false }) => {
     return () => {
       circlesRef.current.forEach(circle => {
         if (circle && map) {
-          map.removeLayer(circle.id);
-          map.removeSource(circle.id);
+          // Remove both line and fill layers
+          if (map.getLayer(circle.id)) {
+            map.removeLayer(circle.id);
+          }
+          if (map.getLayer(circle.fillId)) {
+            map.removeLayer(circle.fillId);
+          }
+          // Remove both sources
+          if (map.getSource(circle.id)) {
+            map.removeSource(circle.id);
+          }
+          if (map.getSource(circle.fillId)) {
+            map.removeSource(circle.fillId);
+          }
         }
       });
       circlesRef.current = [];
