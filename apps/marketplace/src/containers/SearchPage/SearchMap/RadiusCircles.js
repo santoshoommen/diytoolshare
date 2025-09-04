@@ -27,9 +27,9 @@ const RadiusCircles = ({ map, center, isVisible = false }) => {
 
     // Define the three radius circles with layered opacity effect
     const radiusConfigs = [
-      { miles: 3, color: '#3B82F6', opacity: 0.2, width: 1, fillOpacity: 0.05 },    // Blue - 3 miles (very subtle)
-      { miles: 5, color: '#10B981', opacity: 0.3, width: 2, fillOpacity: 0.1 },    // Green - 5 miles (slight opacity)
-      { miles: 10, color: '#EF4444', opacity: 0.5, width: 2, fillOpacity: 0.2 }    // Red - 10 miles (more opacity)
+      { miles: 2, color: '#3B82F6', opacity: 0.2, width: 1, fillOpacity: 0.05 },    // Blue - 2 miles (very subtle)
+      { miles: 3, color: '#10B981', opacity: 0.3, width: 2, fillOpacity: 0.1 },    // Green - 3 miles (slight opacity)
+      { miles: 5, color: '#EF4444', opacity: 0.5, width: 2, fillOpacity: 0.2 }    // Red - 5 miles (more opacity)
     ];
 
     // Remove existing circles first
