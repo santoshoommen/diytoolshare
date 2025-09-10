@@ -20,6 +20,28 @@
 .noPriceVariant {
 }
 
+.quickSetupButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.quickSetupButton {
+  padding: 8px 0;
+  color: var(--colorPrimary);
+  font-weight: var(--fontWeightMedium);
+  border: 1px solid var(--colorPrimary);
+  border-radius: 4px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.quickSetupButton:hover {
+  background-color: var(--colorPrimary);
+  color: var(--colorWhite);
+}
+
 .priceVariants {
   & .priceVariant {
     padding: 0 0 32px 0;
@@ -96,6 +118,12 @@
     padding: 1px 0 7px 0;
     margin: 0 0 72px 0;
   }
+}
+
+.addVariationButton {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--colorGrey200);
 }
 
 .smartPricingSection {

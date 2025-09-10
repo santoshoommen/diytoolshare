@@ -7,7 +7,6 @@ import { FormattedMessage, useIntl } from '../../../../../util/reactIntl';
 import { Form, Heading, H3, PrimaryButton } from '../../../../../components';
 import FieldTimeZoneSelect from '../FieldTimeZoneSelect';
 import AvailabilityPlanEntries from './AvailabilityPlanEntries';
-import SmartDatePicker from '../../../../../components/SmartDatePicker/SmartDatePicker';
 
 import css from './EditListingAvailabilityPlanForm.module.css';
 
@@ -74,7 +73,6 @@ const submit = (onSubmit, weekdays) => values => {
 const EditListingAvailabilityPlanForm = props => {
   const intl = useIntl();
   const { onSubmit, ...restOfprops } = props;
-  const [selectedDateDays, setSelectedDateDays] = useState([]);
   return (
     <FinalForm
       {...restOfprops}
@@ -130,77 +128,6 @@ const EditListingAvailabilityPlanForm = props => {
                 selectClassName={css.timeZoneSelect}
                 rootClassName={css.timeZoneField}
               />
-            </div>
-            {/* Smart Date Picker Integration */}
-            <div className={css.smartSchedulingSection}>
-              <Heading as="h3" rootClassName={css.subheading}>
-                <FormattedMessage 
-                  id="EditListingAvailabilityPlanForm.smartSchedulingTitle" 
-                  defaultMessage="Smart Availability Selection"
-                />
-              </Heading>
-              <p className={css.smartSchedulingDescription}>
-                <FormattedMessage 
-                  id="EditListingAvailabilityPlanForm.smartSchedulingDescription" 
-                  defaultMessage="Select specific dates to create availability exceptions. This will make you available on those exact dates, regardless of your weekly schedule. Perfect for one-off availability or special events."
-                />
-              </p>
-              <SmartDatePicker
-                name="smart-dates"
-                label="Select Available Dates"
-                placeholder="Choose your available dates"
-                toolType="power-tools"
-                onDateChange={(dateData) => {
-                  console.log('Smart date selection for availability:', dateData);
-                  
-                  if (dateData.dates && dateData.dates.length > 0) {
-                    const selectedDates = dateData.dates;
-                    
-                    // Show user what they've selected and provide clear guidance
-                    console.log(`📅 You've selected ${selectedDates.length} dates for availability`);
-                    console.log('💡 Next steps:');
-                    console.log('1. Set up your weekly schedule below (this creates your base availability pattern)');
-                    console.log('2. Use the "Add Exception" button to create specific date exceptions for your selected dates');
-                    console.log('3. This approach gives you maximum flexibility - weekly pattern + specific date overrides');
-                    
-                    // Store selected dates for display
-                    setSelectedDateDays(selectedDates);
-                  } else {
-                    setSelectedDateDays([]);
-                  }
-                }}
-              />
-              
-              {/* Show selected dates and guidance */}
-              {selectedDateDays.length > 0 && (
-                <div className={css.dateHelperSection}>
-                  <p className={css.dateHelperText}>
-                    <FormattedMessage 
-                      id="EditListingAvailabilityPlanForm.dateHelperText" 
-                      defaultMessage="📅 You've selected {count} dates for availability"
-                      values={{ count: selectedDateDays.length }}
-                    />
-                  </p>
-                  <div className={css.selectedDatesList}>
-                    {selectedDateDays.slice(0, 5).map((dateStr, index) => (
-                      <span key={index} className={css.selectedDate}>
-                        {new Date(dateStr).toLocaleDateString()}
-                      </span>
-                    ))}
-                    {selectedDateDays.length > 5 && (
-                      <span className={css.moreDates}>
-                        +{selectedDateDays.length - 5} more dates
-                      </span>
-                    )}
-                  </div>
-                  <p className={css.dateHelperInstructions}>
-                    <FormattedMessage 
-                      id="EditListingAvailabilityPlanForm.dateHelperInstructions" 
-                      defaultMessage="💡 Set up your weekly schedule below, then use 'Add Exception' to create specific availability for these dates."
-                    />
-                  </p>
-                </div>
-              )}
             </div>
 
             <Heading as="h3" rootClassName={css.subheading}>

@@ -19,14 +19,11 @@ const SmartPricing = props => {
 
   const intl = useIntl();
   
-  // Define all available pricing periods
+  // Define available pricing periods - only daily, weekend, and weekly
   const allPricingPeriods = [
-    { id: 'single-day', label: 'Single Day', days: 1, defaultEnabled: true },
-    { id: 'weekend', label: 'Weekend (2 days)', days: 2, defaultEnabled: false },
-    { id: 'three-days', label: '3 Days', days: 3, defaultEnabled: false },
-    { id: 'week', label: 'Week (7 days)', days: 7, defaultEnabled: false },
-    { id: 'two-weeks', label: '2 Weeks', days: 14, defaultEnabled: false },
-    { id: 'month', label: 'Month (30 days)', days: 30, defaultEnabled: false },
+    { id: 'single-day', label: 'Daily', days: 1, defaultEnabled: true },
+    { id: 'weekend', label: 'Weekend (per day)', days: 1, defaultEnabled: true },
+    { id: 'week', label: 'Weekly (per day)', days: 1, defaultEnabled: true },
   ];
 
   // Initialize with only enabled periods
@@ -40,18 +37,13 @@ const SmartPricing = props => {
       .map(period => ({
         ...period,
         price: period.id === 'single-day' ? basePrice : 
-               period.id === 'weekend' ? basePrice * 1.8 :
-               period.id === 'three-days' ? basePrice * 2.7 :
-               period.id === 'week' ? basePrice * 6 :
-               period.id === 'two-weeks' ? basePrice * 11 :
-               period.id === 'month' ? basePrice * 20 : basePrice,
+               period.id === 'weekend' ? basePrice * 1.2 : // 20% above daily
+               period.id === 'week' ? basePrice * 0.8 : // 20% below daily per day
+               basePrice,
         active: true
       }))
   );
 
-  const [customPeriods, setCustomPeriods] = useState([]);
-  const [showCustomForm, setShowCustomForm] = useState(false);
-  const [newCustomPeriod, setNewCustomPeriod] = useState({ name: '', days: '', price: '' });
   const [showPeriodSelector, setShowPeriodSelector] = useState(false);
 
   useEffect(() => {
@@ -60,11 +52,9 @@ const SmartPricing = props => {
       setPricingPeriods(prev => prev.map(period => ({
         ...period,
         price: period.id === 'single-day' ? basePrice : 
-               period.id === 'weekend' ? basePrice * 1.8 :
-               period.id === 'three-days' ? basePrice * 2.7 :
-               period.id === 'week' ? basePrice * 6 :
-               period.id === 'two-weeks' ? basePrice * 11 :
-               period.id === 'month' ? basePrice * 20 : period.price
+               period.id === 'weekend' ? basePrice * 1.2 : // 20% above daily
+               period.id === 'week' ? basePrice * 0.8 : // 20% below daily per day
+               period.price
       })));
     }
   }, [basePrice]);
@@ -81,11 +71,9 @@ const SmartPricing = props => {
         const periodToAdd = allPricingPeriods.find(p => p.id === periodId);
         if (periodToAdd) {
           const newPrice = periodToAdd.id === 'single-day' ? basePrice : 
-                          periodToAdd.id === 'weekend' ? basePrice * 1.8 :
-                          periodToAdd.id === 'three-days' ? basePrice * 2.7 :
-                          periodToAdd.id === 'week' ? basePrice * 6 :
-                          periodToAdd.id === 'two-weeks' ? basePrice * 11 :
-                          periodToAdd.id === 'month' ? basePrice * 20 : basePrice;
+                          periodToAdd.id === 'weekend' ? basePrice * 1.2 : // 20% above daily
+                          periodToAdd.id === 'week' ? basePrice * 0.8 : // 20% below daily per day
+                          basePrice;
           
           setPricingPeriods(current => [...current, {
             ...periodToAdd,
@@ -116,28 +104,8 @@ const SmartPricing = props => {
     }
   };
 
-  const handleCustomPeriodSubmit = () => {
-    if (newCustomPeriod.name && newCustomPeriod.days && newCustomPeriod.price) {
-      const customPeriod = {
-        id: `custom-${Date.now()}`,
-        label: newCustomPeriod.name,
-        price: parseFloat(newCustomPeriod.price),
-        days: parseInt(newCustomPeriod.days),
-        active: false,
-        custom: true
-      };
-      
-      setCustomPeriods(prev => [...prev, customPeriod]);
-      setNewCustomPeriod({ name: '', days: '', price: '' });
-      setShowCustomForm(false);
-    }
-  };
 
-  const removeCustomPeriod = (periodId) => {
-    setCustomPeriods(prev => prev.filter(period => period.id !== periodId));
-  };
-
-  const allPeriods = [...pricingPeriods, ...customPeriods];
+  const allPeriods = pricingPeriods;
 
   return (
     <div className={classNames(rootClassName || css.root, className)}>
@@ -230,66 +198,6 @@ const SmartPricing = props => {
           </div>
         )}
 
-        {/* Custom Period Section */}
-        <div className={css.customPeriodSection}>
-          {!showCustomForm ? (
-                            <Button
-                  className={css.addCustomButton}
-                  onClick={() => setShowCustomForm(true)}
-                  size="small"
-                  type="button"
-                >
-              <FormattedMessage id="SmartPricing.addCustomPeriod" defaultMessage="Add Custom Period" />
-            </Button>
-          ) : (
-            <div className={css.customForm}>
-              <div className={css.customFormRow}>
-                <input
-                  type="text"
-                  placeholder="Period name (e.g., 'Holiday Special')"
-                  value={newCustomPeriod.name}
-                  onChange={(e) => setNewCustomPeriod(prev => ({ ...prev, name: e.target.value }))}
-                  className={css.customInput}
-                />
-                <input
-                  type="number"
-                  placeholder="Days"
-                  value={newCustomPeriod.days}
-                  onChange={(e) => setNewCustomPeriod(prev => ({ ...prev, days: e.target.value }))}
-                  className={css.customInput}
-                  min="1"
-                />
-                <input
-                  type="number"
-                  placeholder="Total price"
-                  value={newCustomPeriod.price}
-                  onChange={(e) => setNewCustomPeriod(prev => ({ ...prev, price: e.target.value }))}
-                  className={css.customInput}
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-              <div className={css.customFormActions}>
-                <Button
-                  className={css.saveCustomButton}
-                  onClick={handleCustomPeriodSubmit}
-                  size="small"
-                  type="button"
-                >
-                  <FormattedMessage id="SmartPricing.saveCustomPeriod" defaultMessage="Save" />
-                </Button>
-                <Button
-                  className={css.cancelCustomButton}
-                  onClick={() => setShowCustomForm(false)}
-                  size="small"
-                  type="button"
-                >
-                  <FormattedMessage id="SmartPricing.cancel" defaultMessage="Cancel" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Pricing Tips */}
         <div className={css.pricingTips}>
@@ -297,10 +205,10 @@ const SmartPricing = props => {
             <FormattedMessage id="SmartPricing.pricingTipsTitle" defaultMessage="Pricing Tips" />
           </h4>
           <ul className={css.tipsList}>
-            <li>Weekend rates are typically 1.8x daily rate</li>
-            <li>Weekly rates offer 15-20% discount vs daily</li>
-            <li>Monthly rates can be 30-40% off daily rate</li>
-            <li>Consider demand patterns in your area</li>
+            <li>Weekend rate is 20% above daily rate (per day)</li>
+            <li>Weekly rate is 20% below daily rate (per day)</li>
+            <li>All rates are calculated per day with different multipliers</li>
+            <li>Consider your local market when setting prices</li>
           </ul>
         </div>
       </div>

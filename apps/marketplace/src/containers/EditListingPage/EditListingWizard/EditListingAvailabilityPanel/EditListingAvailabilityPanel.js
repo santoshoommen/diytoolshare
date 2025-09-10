@@ -178,7 +178,6 @@ const EditListingAvailabilityPanel = props => {
     history,
   } = props;
   // Hooks
-  const [isEditPlanModalOpen, setIsEditPlanModalOpen] = useState(false);
   const [isEditExceptionsModalOpen, setIsEditExceptionsModalOpen] = useState(false);
   const [valuesFromLastSubmit, setValuesFromLastSubmit] = useState(null);
 
@@ -197,13 +196,13 @@ const EditListingAvailabilityPanel = props => {
     type: 'availability-plan/time',
     timezone: defaultTimeZone(),
     entries: [
-      // { dayOfWeek: 'mon', startTime: '09:00', endTime: '17:00', seats: 1 },
-      // { dayOfWeek: 'tue', startTime: '09:00', endTime: '17:00', seats: 1 },
-      // { dayOfWeek: 'wed', startTime: '09:00', endTime: '17:00', seats: 1 },
-      // { dayOfWeek: 'thu', startTime: '09:00', endTime: '17:00', seats: 1 },
-      // { dayOfWeek: 'fri', startTime: '09:00', endTime: '17:00', seats: 1 },
-      // { dayOfWeek: 'sat', startTime: '09:00', endTime: '17:00', seats: 1 },
-      // { dayOfWeek: 'sun', startTime: '09:00', endTime: '17:00', seats: 1 },
+      { dayOfWeek: 'mon', startTime: '09:00', endTime: '17:00', seats: 1 },
+      { dayOfWeek: 'tue', startTime: '09:00', endTime: '17:00', seats: 1 },
+      { dayOfWeek: 'wed', startTime: '09:00', endTime: '17:00', seats: 1 },
+      { dayOfWeek: 'thu', startTime: '09:00', endTime: '17:00', seats: 1 },
+      { dayOfWeek: 'fri', startTime: '09:00', endTime: '17:00', seats: 1 },
+      { dayOfWeek: 'sat', startTime: '09:00', endTime: '17:00', seats: 1 },
+      { dayOfWeek: 'sun', startTime: '09:00', endTime: '17:00', seats: 1 },
     ],
   };
   const availabilityPlan = listingAttributes?.availabilityPlan || defaultAvailabilityPlan;
@@ -217,10 +216,10 @@ const EditListingAvailabilityPanel = props => {
     // Final Form can wait for Promises to return.
     return onSubmit(createAvailabilityPlan(values))
       .then(() => {
-        setIsEditPlanModalOpen(false);
+        // Success - form values are already updated
       })
       .catch(e => {
-        // Don't close modal if there was an error
+        // Handle error if needed
       });
   };
 
@@ -282,19 +281,24 @@ const EditListingAvailabilityPanel = props => {
           </p>
         ) : null}
 
-        <InlineTextButton
-          className={css.editPlanButton}
-          onClick={() => setIsEditPlanModalOpen(true)}
-        >
-          {hasAvailabilityPlan ? (
-            <FormattedMessage id="EditListingAvailabilityPanel.editAvailabilityPlan" />
-          ) : (
-            <FormattedMessage id="EditListingAvailabilityPanel.setAvailabilityPlan" />
-          )}
-        </InlineTextButton>
       </div>
 
-
+      {/* Show the weekly scheduler directly on the page */}
+      <div className={css.section}>
+        <EditListingAvailabilityPlanForm
+          formId="EditListingAvailabilityPlanForm"
+          listingTitle={listingAttributes?.title}
+          availabilityPlan={availabilityPlan}
+          weekdays={rotateDays(WEEKDAYS, firstDayOfWeek)}
+          onSubmit={handlePlanSubmit}
+          initialValues={initialPlanValues}
+          inProgress={updateInProgress}
+          fetchErrors={errors}
+          useFullDays={useFullDays}
+          useMultipleSeats={useMultipleSeats}
+          unitType={unitType}
+        />
+      </div>
 
       {hasAvailabilityPlan ? (
         <>
@@ -346,30 +350,6 @@ const EditListingAvailabilityPanel = props => {
         </Button>
       ) : null}
 
-      {onManageDisableScrolling && isEditPlanModalOpen ? (
-        <Modal
-          id="EditAvailabilityPlan"
-          isOpen={isEditPlanModalOpen}
-          onClose={() => setIsEditPlanModalOpen(false)}
-          onManageDisableScrolling={onManageDisableScrolling}
-          containerClassName={css.modalContainer}
-          usePortal
-        >
-          <EditListingAvailabilityPlanForm
-            formId="EditListingAvailabilityPlanForm"
-            listingTitle={listingAttributes?.title}
-            availabilityPlan={availabilityPlan}
-            weekdays={rotateDays(WEEKDAYS, firstDayOfWeek)}
-            onSubmit={handlePlanSubmit}
-            initialValues={initialPlanValues}
-            inProgress={updateInProgress}
-            fetchErrors={errors}
-            useFullDays={useFullDays}
-            useMultipleSeats={useMultipleSeats}
-            unitType={unitType}
-          />
-        </Modal>
-      ) : null}
 
       {onManageDisableScrolling && isEditExceptionsModalOpen ? (
         <Modal

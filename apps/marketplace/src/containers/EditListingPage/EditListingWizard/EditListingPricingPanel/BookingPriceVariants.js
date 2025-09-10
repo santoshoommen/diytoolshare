@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Field } from 'react-final-form';
 import { FieldArray } from 'react-final-form-arrays';
 import Decimal from 'decimal.js';
@@ -8,6 +8,8 @@ import classNames from 'classnames';
 import appSettings from '../../../../config/settings';
 import { FormattedMessage, useIntl } from '../../../../util/reactIntl';
 import { types as sdkTypes } from '../../../../util/sdkLoader';
+
+const { Money } = sdkTypes;
 import { createSlug } from '../../../../util/urlHelpers';
 import { isPriceVariationsEnabled } from '../../../../util/configHelpers';
 import * as validators from '../../../../util/validators';
@@ -23,13 +25,9 @@ import {
   ValidationError,
 } from '../../../../components';
 
-// Import smart components
-import SmartPricing from '../../../../components/SmartPricing/SmartPricing';
 
 // Import modules from this directory
 import css from './BookingPriceVariants.module.css';
-
-const { Money } = sdkTypes;
 
 const MAX_HOURS_FOR_BOOKING_DURATION = 12;
 const MINUTES_FOR_BOOKING_DURATION = [0, 15, 30, 45];
@@ -68,23 +66,13 @@ export const getInitialValuesForPriceVariants = (props, isUsingBookingPriceVaria
   const hasPriceVariants = priceVariants.length > 0;
   const isFixedUnitType = unitType === FIXED;
 
-  const variants = hasPriceVariants
-    ? priceVariants.map(variant => {
-        const nameMaybe = variant.name ? { name: variant.name } : {};
-        const bookingLengthInMinutes = setDefault(variant.bookingLengthInMinutes, 60);
-        const bookingLengthInMinutesMaybe = isFixedUnitType ? { bookingLengthInMinutes } : {};
-        const priceInSubunits = setDefault(variant.priceInSubunits, null);
-        return {
-          ...nameMaybe,
-          ...bookingLengthInMinutesMaybe,
-          price: priceInSubunits ? new Money(priceInSubunits, price.currency) : null,
-        };
-      })
-    : isFixedUnitType
-    ? [{ name: null, price: null, bookingLengthInMinutes: 60 }]
-    : isUsingBookingPriceVariations && !!price
-    ? [{ name: null, price }]
-    : [{ name: null, price: null }];
+  // Always create the three default variants for consistency
+  // If there are existing variants, we'll still show the three default ones
+  const variants = [
+    { name: 'Daily', price: null, ...(isFixedUnitType && { bookingLengthInMinutes: 24 * 60 }) },
+    { name: 'Weekend (per day)', price: null, ...(isFixedUnitType && { bookingLengthInMinutes: 24 * 60 }) },
+    { name: 'Weekly (per day)', price: null, ...(isFixedUnitType && { bookingLengthInMinutes: 24 * 60 }) }
+  ];
 
   return variants ? { priceVariants: variants } : {};
 };
@@ -289,6 +277,62 @@ const PriceVariant = props => {
     intl,
   } = props;
 
+  // Ref to prevent infinite loops during price updates
+  const isUpdatingPrices = useRef(false);
+
+  // Helper function to update related prices when daily price changes
+  const updateRelatedPrices = (dailyPriceAmount) => {
+    if (!dailyPriceAmount || dailyPriceAmount <= 0 || isUpdatingPrices.current) return;
+    
+    console.log('updateRelatedPrices called with:', dailyPriceAmount);
+    isUpdatingPrices.current = true;
+    
+    // Add a small delay to prevent rapid-fire updates
+    setTimeout(() => {
+      try {
+        const formValues = formApi.getState().values;
+        const priceVariants = formValues.priceVariants || [];
+        
+        console.log('Current priceVariants:', priceVariants);
+        
+        // Find the daily variant and update related variants
+        const dailyIndex = priceVariants.findIndex(v => v.name === 'Daily');
+        const weekendIndex = priceVariants.findIndex(v => v.name === 'Weekend (per day)');
+        const weeklyIndex = priceVariants.findIndex(v => v.name === 'Weekly (per day)');
+        
+        console.log('Indices:', { dailyIndex, weekendIndex, weeklyIndex, currentIndex });
+        
+        if (dailyIndex !== -1 && currentIndex === dailyIndex) {
+          // Update weekend price (20% above daily)
+          if (weekendIndex !== -1) {
+            const weekendPrice = Math.round(dailyPriceAmount * 1.2);
+            const currentWeekendPrice = priceVariants[weekendIndex]?.price?.amount;
+            console.log('Weekend price calculation:', { weekendPrice, currentWeekendPrice });
+            // Only update if the price is different to prevent loops
+            if (currentWeekendPrice !== weekendPrice) {
+              console.log('Updating weekend price to:', weekendPrice);
+              formApi.change(`priceVariants.${weekendIndex}.price`, new Money(weekendPrice, marketplaceCurrency));
+            }
+          }
+          
+          // Update weekly price (20% below daily)
+          if (weeklyIndex !== -1) {
+            const weeklyPrice = Math.round(dailyPriceAmount * 0.8);
+            const currentWeeklyPrice = priceVariants[weeklyIndex]?.price?.amount;
+            console.log('Weekly price calculation:', { weeklyPrice, currentWeeklyPrice });
+            // Only update if the price is different to prevent loops
+            if (currentWeeklyPrice !== weeklyPrice) {
+              console.log('Updating weekly price to:', weeklyPrice);
+              formApi.change(`priceVariants.${weeklyIndex}.price`, new Money(weeklyPrice, marketplaceCurrency));
+            }
+          }
+        }
+      } finally {
+        isUpdatingPrices.current = false;
+      }
+    }, 100); // Small delay to prevent rapid updates
+  };
+
   const priceValidators = getPriceValidators(
     listingMinimumPriceSubUnits,
     marketplaceCurrency,
@@ -351,6 +395,24 @@ const PriceVariant = props => {
         })}
         currencyConfig={appSettings.getCurrencyFormatting(marketplaceCurrency)}
         validate={priceValidators}
+        onChange={(value) => {
+          // Check if this is the Daily variant and update related prices
+          const formValues = formApi.getState().values;
+          const priceVariants = formValues.priceVariants || [];
+          const currentVariant = priceVariants[currentIndex];
+          
+          console.log('Price onChange:', {
+            currentIndex,
+            currentVariant,
+            value,
+            priceVariants
+          });
+          
+          if (currentVariant?.name === 'Daily' && value?.amount && value.amount > 0) {
+            console.log('Updating related prices for daily amount:', value.amount);
+            updateRelatedPrices(value.amount);
+          }
+        }}
       />
 
       {unitType === FIXED ? (
@@ -451,28 +513,6 @@ export const BookingPriceVariants = props => {
         const priceVariantNames = fields?.value?.map(field => field.name);
         return (
           <>
-            {fields?.length === 0 ? (
-              <div className={css.noPriceVariant}>
-                <div className={css.error}>
-                  {intl.formatMessage({ id: 'EditListingPricingForm.priceVariant.required' })}
-                </div>
-                <InlineTextButton
-                  className={css.addPriceVariantButton}
-                  onClick={() => {
-                    const initialPriceVariantValues =
-                      unitType === FIXED && isPriceVariationsInUse
-                        ? { name: null, price: null, bookingLengthInMinutes: 60 }
-                        : unitType === FIXED
-                        ? { price: null, bookingLengthInMinutes: 60 }
-                        : { name: null, price: null };
-                    fields.push(initialPriceVariantValues);
-                    addNewVariantKey(setVariantKeys); // Handle unique keys for each array item.
-                  }}
-                >
-                  <FormattedMessage id="EditListingPricingForm.priceVariant.addPriceVariant" />
-                </InlineTextButton>
-              </div>
-            ) : null}
 
             <div className={css.priceVariants}>
               {fields.map((name, index) => {
@@ -509,46 +549,27 @@ export const BookingPriceVariants = props => {
 
             {isPriceVariationsInUse && fields?.length < 20 ? (
               <div className={css.addPriceVariants}>
-                <InlineTextButton
-                  className={css.addPriceVariantButton}
-                  type="button"
-                  onClick={() => {
-                    const initialPriceVariantValues =
-                      unitType === FIXED && isPriceVariationsInUse
-                        ? { name: null, price: null, bookingLengthInMinutes: 60 }
-                        : unitType === FIXED
-                        ? { price: null, bookingLengthInMinutes: 60 }
-                        : { name: null, price: null };
-                    fields.push(initialPriceVariantValues);
-                    addNewVariantKey(setVariantKeys); // Handle unique keys for each array item.
-                  }}
-                >
-                  <FormattedMessage id="EditListingPricingForm.priceVariant.addPriceVariant" />
-                </InlineTextButton>
+                <div className={css.quickSetupButtons}>
+                  <InlineTextButton
+                    className={css.addPriceVariantButton}
+                    type="button"
+                    onClick={() => {
+                      const initialPriceVariantValues =
+                        unitType === FIXED && isPriceVariationsInUse
+                          ? { name: null, price: null, bookingLengthInMinutes: 60 }
+                          : unitType === FIXED
+                          ? { price: null, bookingLengthInMinutes: 60 }
+                          : { name: null, price: null };
+                      fields.push(initialPriceVariantValues);
+                      addNewVariantKey(setVariantKeys); // Handle unique keys for each array item.
+                    }}
+                  >
+                    <FormattedMessage id="EditListingPricingForm.priceVariant.addPriceVariant" />
+                  </InlineTextButton>
+                </div>
               </div>
             ) : null}
 
-            {/* Smart Pricing Integration */}
-            <div className={css.smartPricingSection}>
-              <SmartPricing
-                name="smart-pricing"
-                label="Smart Pricing for Different Periods"
-                basePrice={fields?.value?.[0]?.price?.amount ? fields.value[0].price.amount / 100 : 0}
-                currency={marketplaceCurrency}
-                onPriceChange={(pricingPeriods) => {
-                  console.log('Smart pricing periods:', pricingPeriods);
-                  // Here you could update the price variants with the new pricing periods
-                  if (pricingPeriods && pricingPeriods.length > 0) {
-                    // Update the first price variant with the single day price
-                    const singleDayPeriod = pricingPeriods.find(p => p.id === 'single-day');
-                    if (singleDayPeriod && fields?.value?.[0]) {
-                      const newPriceInSubUnits = Math.round(singleDayPeriod.price * 100);
-                      formApi.change(`${fields.name}.0.price`, new Money(newPriceInSubUnits, marketplaceCurrency));
-                    }
-                  }
-                }}
-              />
-            </div>
           </>
         );
       }}
