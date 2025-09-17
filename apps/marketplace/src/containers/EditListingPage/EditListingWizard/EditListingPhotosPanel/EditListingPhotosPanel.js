@@ -10,11 +10,26 @@ import { H3, ListingLink } from '../../../../components';
 
 // Import modules from this directory
 import EditListingPhotosForm from './EditListingPhotosForm';
+import EditListingPhotosFormWithDraftCreation from './EditListingPhotosFormWithDraftCreation';
 import css from './EditListingPhotosPanel.module.css';
 
-const getInitialValues = params => {
+const getInitialValues = (params, listing, isFirstTab) => {
   const { images = [] } = params;
-  return { images };
+  const baseValues = { images };
+  
+  // If this is the first tab, include draft creation fields
+  if (isFirstTab && listing) {
+    const { title, description, publicData } = listing.attributes || {};
+    const { listingType } = publicData || {};
+    return {
+      ...baseValues,
+      title: title || '',
+      description: description || '',
+      listingType: listingType || '',
+    };
+  }
+  
+  return baseValues;
 };
 
 /**
@@ -53,6 +68,8 @@ const EditListingPhotosPanel = props => {
     onSubmit,
     onRemoveImage,
     listingImageConfig,
+    listingTypes,
+    isFirstTab,
   } = props;
 
   const rootClass = rootClassName || css.root;
@@ -74,23 +91,44 @@ const EditListingPhotosPanel = props => {
           />
         )}
       </H3>
-      <EditListingPhotosForm
-        className={css.form}
-        disabled={disabled}
-        ready={ready}
-        fetchErrors={errors}
-        initialValues={getInitialValues(props)}
-        onImageUpload={onImageUpload}
-        onSubmit={values => {
-          const { addImage, ...updateValues } = values;
-          onSubmit(updateValues);
-        }}
-        onRemoveImage={onRemoveImage}
-        saveActionMsg={submitButtonText}
-        updated={panelUpdated}
-        updateInProgress={updateInProgress}
-        listingImageConfig={listingImageConfig}
-      />
+      {isFirstTab ? (
+        <EditListingPhotosFormWithDraftCreation
+          className={css.form}
+          disabled={disabled}
+          ready={ready}
+          fetchErrors={errors}
+          initialValues={getInitialValues(props, listing, isFirstTab)}
+          onImageUpload={onImageUpload}
+          onSubmit={values => {
+            const { addImage, ...updateValues } = values;
+            onSubmit(updateValues);
+          }}
+          onRemoveImage={onRemoveImage}
+          saveActionMsg={submitButtonText}
+          updated={panelUpdated}
+          updateInProgress={updateInProgress}
+          listingImageConfig={listingImageConfig}
+          listingTypes={listingTypes}
+        />
+      ) : (
+        <EditListingPhotosForm
+          className={css.form}
+          disabled={disabled}
+          ready={ready}
+          fetchErrors={errors}
+          initialValues={getInitialValues(props, listing, isFirstTab)}
+          onImageUpload={onImageUpload}
+          onSubmit={values => {
+            const { addImage, ...updateValues } = values;
+            onSubmit(updateValues);
+          }}
+          onRemoveImage={onRemoveImage}
+          saveActionMsg={submitButtonText}
+          updated={panelUpdated}
+          updateInProgress={updateInProgress}
+          listingImageConfig={listingImageConfig}
+        />
+      )}
     </div>
   );
 };

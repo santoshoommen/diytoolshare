@@ -66,12 +66,12 @@ import css from './EditListingWizard.module.css';
 // Note 1: You need to change save button translations for new listing flow
 // Note 2: Ensure that draft listing is created after the first panel
 //         and listing publishing happens after last panel.
-// Note 3: The first tab creates a draft listing and title is mandatory attribute for it.
-//         Details tab asks for "title" and is therefore the first tab in the wizard flow.
+// Note 3: The first tab creates a draft listing. Photos tab is now first and will create the draft listing.
+//         Details tab asks for "title" and other required fields and is now second in the wizard flow.
 const TABS_DETAILS_ONLY = [DETAILS];
-const TABS_PRODUCT = [DETAILS, PRICING_AND_STOCK, DELIVERY, PHOTOS, STYLE];
-const TABS_BOOKING = [DETAILS, LOCATION, PRICING, AVAILABILITY, PHOTOS, STYLE];
-const TABS_INQUIRY = [DETAILS, LOCATION, PRICING, PHOTOS, STYLE];
+const TABS_PRODUCT = [PHOTOS, DETAILS, PRICING_AND_STOCK, DELIVERY, STYLE];
+const TABS_BOOKING = [PHOTOS, DETAILS, LOCATION, PRICING, AVAILABILITY, STYLE];
+const TABS_INQUIRY = [PHOTOS, DETAILS, LOCATION, PRICING, STYLE];
 const TABS_ALL = [...TABS_PRODUCT, ...TABS_BOOKING, ...TABS_INQUIRY];
 
 // Tabs are horizontal in small screens
@@ -218,10 +218,12 @@ const hasValidListingFieldsInExtendedData = (publicData, privateData, config) =>
  *
  * @param tab wizard's tab
  * @param listing is contains some specific data if tab is completed
+ * @param config configuration object
+ * @param tabs array of tabs to determine if photos is first
  *
  * @return true if tab / step is completed.
  */
-const tabCompleted = (tab, listing, config) => {
+const tabCompleted = (tab, listing, config, tabs) => {
   const {
     availabilityPlan,
     description,
@@ -263,6 +265,19 @@ const tabCompleted = (tab, listing, config) => {
     case AVAILABILITY:
       return !!availabilityPlan;
     case PHOTOS:
+      // If photos is the first tab, it also needs to have the draft creation fields
+      const isPhotosFirstTab = tabs && tabs[0] === PHOTOS;
+      if (isPhotosFirstTab) {
+        return !!(
+          images && images.length > 0 &&
+          description &&
+          title &&
+          listingType &&
+          transactionProcessAlias &&
+          unitType &&
+          hasValidListingFieldsInExtendedData(publicData, privateData, config)
+        );
+      }
       return images && images.length > 0;
     case STYLE:
       return !!cardStyle;
@@ -286,7 +301,7 @@ const tabsActive = (isNew, listing, tabs, config) => {
     const previousTabIndex = tabs.findIndex(t => t === tab) - 1;
     const validTab = previousTabIndex >= 0;
     const hasListingType = !!listing?.attributes?.publicData?.listingType;
-    const prevTabComletedInNewFlow = tabCompleted(tabs[previousTabIndex], listing, config);
+    const prevTabComletedInNewFlow = tabCompleted(tabs[previousTabIndex], listing, config, tabs);
     const isActive =
       validTab && !isNew ? hasListingType : validTab && isNew ? prevTabComletedInNewFlow : true;
     return { ...acc, [tab]: isActive };

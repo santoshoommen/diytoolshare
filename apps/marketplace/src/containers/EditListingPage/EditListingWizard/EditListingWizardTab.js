@@ -248,6 +248,7 @@ const EditListingWizardTab = props => {
       );
     }
     case PHOTOS: {
+      const isFirstTab = marketplaceTabs[0] === PHOTOS;
       return (
         <EditListingPhotosPanel
           {...panelProps(PHOTOS)}
@@ -255,6 +256,8 @@ const EditListingWizardTab = props => {
           images={images}
           onImageUpload={onImageUpload}
           onRemoveImage={onRemoveImage}
+          listingTypes={config.listing.listingTypes}
+          isFirstTab={isFirstTab}
         />
       );
     }

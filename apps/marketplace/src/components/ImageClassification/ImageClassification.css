@@ -1,0 +1,395 @@
+/* Image Classification Component Styles */
+
+.root {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--colorGrey300);
+  border-radius: 8px;
+  background-color: var(--colorWhite);
+}
+
+/* Classifying State */
+.classifyingContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--colorGrey50);
+  border-radius: 6px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+.classifyingText {
+  margin: 0;
+  color: var(--colorGrey700);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.errorContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--colorErrorLight);
+  border: 1px solid var(--colorError);
+  border-radius: 6px;
+}
+
+.errorIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--colorError);
+  flex-shrink: 0;
+}
+
+.errorText {
+  margin: 0;
+  color: var(--colorError);
+  font-size: 14px;
+  flex: 1;
+}
+
+.retryButton {
+  padding: 8px 16px;
+  background-color: var(--colorError);
+  color: var(--colorWhite);
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retryButton:hover:not(:disabled) {
+  background-color: var(--colorErrorDark);
+}
+
+.retryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Results Container */
+.resultsContainer {
+  padding: 16px;
+  background-color: var(--colorSuccessLight);
+  border: 1px solid var(--colorSuccess);
+  border-radius: 6px;
+}
+
+.classificationHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.successIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--colorSuccess);
+  flex-shrink: 0;
+}
+
+.classificationTitle {
+  margin: 0;
+  color: var(--colorGrey900);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Prediction Info */
+.predictionContainer {
+  margin-bottom: 16px;
+}
+
+.predictionInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.predictedTool {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--colorGrey900);
+}
+
+.confidence {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.highConfidence {
+  background-color: var(--colorSuccess);
+  color: var(--colorWhite);
+}
+
+.lowConfidence {
+  background-color: var(--colorWarning);
+  color: var(--colorWhite);
+}
+
+.lowConfidenceWarning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--colorWarningLight);
+  border: 1px solid var(--colorWarning);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--colorWarningDark);
+}
+
+.warningIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--colorWarning);
+  flex-shrink: 0;
+}
+
+/* Suggestion Container */
+.suggestionContainer {
+  margin-bottom: 16px;
+}
+
+.suggestionTitle {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--colorGrey800);
+}
+
+.suggestionDescription {
+  margin: 0 0 16px 0;
+  padding: 12px;
+  background-color: var(--colorWhite);
+  border: 1px solid var(--colorGrey300);
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--colorGrey700);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.acceptButton {
+  padding: 10px 20px;
+  background-color: var(--colorSuccess);
+  color: var(--colorWhite);
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.acceptButton:hover:not(:disabled) {
+  background-color: var(--colorSuccessDark);
+}
+
+.rejectButton {
+  padding: 10px 20px;
+  background-color: transparent;
+  color: var(--colorGrey600);
+  border: 1px solid var(--colorGrey400);
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rejectButton:hover:not(:disabled) {
+  background-color: var(--colorGrey50);
+  border-color: var(--colorGrey500);
+}
+
+.acceptButton:disabled,
+.rejectButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Accepted State */
+.acceptedContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--colorSuccessLight);
+  border: 1px solid var(--colorSuccess);
+  border-radius: 4px;
+}
+
+.acceptedIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--colorSuccess);
+  flex-shrink: 0;
+}
+
+.acceptedText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--colorSuccessDark);
+}
+
+/* Alternative Predictions */
+.alternativePredictions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--colorGrey300);
+}
+
+.alternativesTitle {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--colorGrey600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.alternativesList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alternativeItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--colorGrey200);
+}
+
+.alternativeItem:last-child {
+  border-bottom: none;
+}
+
+.alternativeName {
+  font-size: 13px;
+  color: var(--colorGrey700);
+}
+
+.alternativeConfidence {
+  font-size: 12px;
+  color: var(--colorGrey500);
+  font-weight: 500;
+}
+
+/* Test Component Styles */
+.testContainer {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid var(--colorGrey300);
+  border-radius: 8px;
+  background-color: var(--colorWhite);
+}
+
+.testSection {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid var(--colorGrey200);
+  border-radius: 6px;
+  background-color: var(--colorGrey50);
+}
+
+.testSection h4 {
+  margin: 0 0 12px 0;
+  color: var(--colorGrey800);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.testButton {
+  padding: 10px 20px;
+  background-color: var(--colorPrimary);
+  color: var(--colorWhite);
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.testButton:hover:not(:disabled) {
+  background-color: var(--colorPrimaryDark);
+}
+
+.testButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fileInput {
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 1px solid var(--colorGrey400);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.testSection ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.testSection li {
+  margin-bottom: 8px;
+  color: var(--colorGrey700);
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .root {
+    margin: 12px 0;
+    padding: 12px;
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+  }
+  
+  .acceptButton,
+  .rejectButton {
+    width: 100%;
+  }
+  
+  .predictionInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .testContainer {
+    margin: 12px;
+    padding: 16px;
+  }
+}

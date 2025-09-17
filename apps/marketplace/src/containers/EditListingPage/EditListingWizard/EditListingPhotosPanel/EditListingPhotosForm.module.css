@@ -9,6 +9,23 @@
   flex-shrink: 0;
 }
 
+.draftFields {
+  flex-shrink: 0;
+  margin: 0 0 32px 0;
+  padding: 24px;
+  background-color: var(--colorGrey50);
+  border-radius: 8px;
+  border: 1px solid var(--colorGrey200);
+}
+
+.draftFields > * {
+  margin-bottom: 16px;
+}
+
+.draftFields > *:last-child {
+  margin-bottom: 0;
+}
+
 .imagesFieldArray {
   flex-shrink: 0;
   display: grid;
