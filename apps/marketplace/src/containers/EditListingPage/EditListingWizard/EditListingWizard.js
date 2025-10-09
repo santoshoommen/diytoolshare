@@ -268,15 +268,37 @@ const tabCompleted = (tab, listing, config, tabs) => {
       // If photos is the first tab, it also needs to have the draft creation fields
       const isPhotosFirstTab = tabs && tabs[0] === PHOTOS;
       if (isPhotosFirstTab) {
-        return !!(
+        const hasRequiredFields = !!(
           images && images.length > 0 &&
           description &&
           title &&
           listingType &&
           transactionProcessAlias &&
-          unitType &&
-          hasValidListingFieldsInExtendedData(publicData, privateData, config)
+          unitType
         );
+        
+        console.log('Photos tab completion check - hasRequiredFields:', hasRequiredFields);
+        console.log('Photos tab completion check - individual fields:', {
+          hasImages: !!(images && images.length > 0),
+          hasDescription: !!description,
+          hasTitle: !!title,
+          hasListingType: !!listingType,
+          hasTransactionProcess: !!transactionProcessAlias,
+          hasUnitType: !!unitType
+        });
+        console.log('Photos tab completion check - listing data:', {
+          listingId: listing.id?.uuid,
+          images: images,
+          description: description,
+          title: title,
+          listingType: listingType,
+          transactionProcessAlias: transactionProcessAlias,
+          unitType: unitType
+        });
+        console.log('Photos tab completion check - publicData:', publicData);
+        console.log('Photos tab completion check - privateData:', privateData);
+        
+        return hasRequiredFields;
       }
       return images && images.length > 0;
     case STYLE:
@@ -570,6 +592,13 @@ class EditListingWizard extends Component {
 
     // Redirect user to first tab when encoutering outdated draft listings.
     if (invalidExistingListingType && isNewListingFlow && selectedTab !== tabs[0]) {
+      console.log('Redirecting due to invalidExistingListingType:', {
+        invalidExistingListingType,
+        existingListingType,
+        listingTypeConfig,
+        selectedTab,
+        tabs
+      });
       return <NamedRedirect name="EditListingPage" params={{ ...params, tab: tabs[0] }} />;
     }
 
@@ -580,11 +609,16 @@ class EditListingWizard extends Component {
       const nearestActiveTab = tabs
         .slice(0, currentTabIndex)
         .reverse()
-        .find(t => tabsStatus[t]);
+        .find(t => tabsStatus[t]) || tabs[0]; // Fallback to first tab if no active tab found
 
-      console.log(
-        `You tried to access an EditListingWizard tab (${selectedTab}), which was not yet activated.`
-      );
+      console.log('Redirecting due to inactive tab:', {
+        selectedTab,
+        tabsStatus,
+        nearestActiveTab,
+        currentListing: currentListing.attributes,
+        hasListingTypeSelected,
+        invalidExistingListingType
+      });
       return <NamedRedirect name="EditListingPage" params={{ ...params, tab: nearestActiveTab }} />;
     }
 

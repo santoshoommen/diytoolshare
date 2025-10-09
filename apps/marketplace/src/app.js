@@ -23,6 +23,7 @@ import { includeCSSProperties } from './util/style';
 import { IncludeScripts } from './util/includeScripts';
 
 import { MaintenanceMode } from './components';
+import TestLink from './components/CustomListingForm/TestLink';
 
 // routing
 import routeConfiguration from './routing/routeConfiguration';
@@ -253,6 +254,7 @@ export const ClientApp = props => {
             <IncludeScripts config={appConfig} />
             <BrowserRouter>
               <Routes logLoadDataCalls={logLoadDataCalls} />
+              <TestLink />
             </BrowserRouter>
           </HelmetProvider>
         </Provider>

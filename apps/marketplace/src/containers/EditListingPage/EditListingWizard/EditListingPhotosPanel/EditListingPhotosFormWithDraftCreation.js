@@ -11,6 +11,7 @@ import { FormattedMessage, useIntl } from '../../../../util/reactIntl';
 import { propTypes } from '../../../../util/types';
 import { nonEmptyArray, composeValidators, required } from '../../../../util/validators';
 import { isUploadImageOverLimitError } from '../../../../util/errors';
+import PropTypes from 'prop-types';
 
 // Import shared components
 import { Button, Form, AspectRatioWrapper, FieldTextInput, FieldSelect } from '../../../../components';
@@ -103,7 +104,7 @@ const FieldListingImage = props => {
   );
 };
 
-export const EditListingPhotosFormWithDraftCreation = props => {
+export const EditListingPhotosFormWithDraftCreation = ({ listingTypes = [], ...props }) => {
   const [state, setState] = useState({ imageUploadRequested: false });
   const [submittedImages, setSubmittedImages] = useState([]);
   const formRef = useRef(null);
@@ -128,7 +129,7 @@ export const EditListingPhotosFormWithDraftCreation = props => {
     <FinalForm
       {...props}
       mutators={{ ...arrayMutators }}
-      enableReinitialize={false}
+      enableReinitialize={true}
       render={formRenderProps => {
         const {
           form,
@@ -147,10 +148,14 @@ export const EditListingPhotosFormWithDraftCreation = props => {
           values,
           listingImageConfig,
           listingTypes,
+          pristine,
         } = formRenderProps;
 
         const images = values.images || [];
         const { aspectWidth = 1, aspectHeight = 1, variantPrefix } = listingImageConfig;
+        
+        // Show other fields only after photos are added
+        const hasPhotos = images && images.length > 0;
 
         const { publishListingError, showListingsError, updateListingError, uploadImageError } =
           fetchErrors || {};
@@ -166,7 +171,25 @@ export const EditListingPhotosFormWithDraftCreation = props => {
 
         const submitReady = (updated && pristineSinceLastSubmit) || ready;
         const submitInProgress = updateInProgress || state.imageUploadRequested;
-        const submitDisabled = disabled || submitInProgress || invalid;
+        // Check if all required fields are filled when photos are present
+        // For photos tab, listing type might come from initial values or current listing
+        const currentListingType = values.listingType || props.initialValues?.listingType;
+        const currentTransactionProcessAlias = values.transactionProcessAlias || props.initialValues?.transactionProcessAlias;
+        const currentUnitType = values.unitType || props.initialValues?.unitType;
+        
+        const hasRequiredFields = hasPhotos && (
+          values.title && 
+          values.title.trim() !== '' &&
+          values.description && 
+          values.description.trim() !== '' &&
+          currentListingType && 
+          currentTransactionProcessAlias && 
+          currentUnitType
+        );
+        
+        
+        // Keep button enabled, validate on submit instead
+        const submitDisabled = disabled || submitInProgress;
 
         const imagesError = touched.images && errors?.images && errors.images[ARRAY_ERROR];
 
@@ -175,10 +198,7 @@ export const EditListingPhotosFormWithDraftCreation = props => {
         return (
           <Form
             className={classes}
-            onSubmit={e => {
-              setSubmittedImages(images);
-              handleSubmit(e);
-            }}
+            onSubmit={handleSubmit}
           >
             {updateListingError ? (
               <p className={css.error}>
@@ -186,46 +206,7 @@ export const EditListingPhotosFormWithDraftCreation = props => {
               </p>
             ) : null}
 
-            {/* Essential fields for draft creation */}
-            <div className={css.draftFields}>
-              <FieldTextInput
-                id="title"
-                name="title"
-                label={intl.formatMessage({ id: 'EditListingPhotosForm.title' })}
-                placeholder={intl.formatMessage({ id: 'EditListingPhotosForm.titlePlaceholder' })}
-                validate={required(intl.formatMessage({ id: 'EditListingPhotosForm.titleRequired' }))}
-                disabled={disabled}
-              />
-
-              <FieldTextInput
-                id="description"
-                name="description"
-                label={intl.formatMessage({ id: 'EditListingPhotosForm.description' })}
-                placeholder={intl.formatMessage({ id: 'EditListingPhotosForm.descriptionPlaceholder' })}
-                validate={required(intl.formatMessage({ id: 'EditListingPhotosForm.descriptionRequired' }))}
-                disabled={disabled}
-              />
-
-              {listingTypes && listingTypes.length > 0 && (
-                <FieldSelect
-                  id="listingType"
-                  name="listingType"
-                  label={intl.formatMessage({ id: 'EditListingPhotosForm.listingType' })}
-                  validate={required(intl.formatMessage({ id: 'EditListingPhotosForm.listingTypeRequired' }))}
-                  disabled={disabled}
-                >
-                  <option value="">
-                    {intl.formatMessage({ id: 'EditListingPhotosForm.listingTypePlaceholder' })}
-                  </option>
-                  {listingTypes.map(option => (
-                    <option key={option.listingType} value={option.listingType}>
-                      {option.label}
-                    </option>
-                  ))}
-                </FieldSelect>
-              )}
-            </div>
-
+            {/* Photos section - shown first */}
             <div className={css.imagesFieldArray}>
               <FieldArray
                 name="images"
@@ -289,6 +270,70 @@ export const EditListingPhotosFormWithDraftCreation = props => {
               <FormattedMessage id="EditListingPhotosForm.addImagesTip" />
             </p>
 
+            {/* Essential fields for draft creation - shown only after photos are added */}
+            {hasPhotos && (
+              <div className={css.draftFields}>
+                <FieldTextInput
+                  id="title"
+                  name="title"
+                  label={intl.formatMessage({ id: 'EditListingPhotosForm.title' })}
+                  placeholder={intl.formatMessage({ id: 'EditListingPhotosForm.titlePlaceholder' })}
+                  validate={required(intl.formatMessage({ id: 'EditListingPhotosForm.titleRequired' }))}
+                  disabled={disabled}
+                />
+
+                <FieldTextInput
+                  id="description"
+                  name="description"
+                  label={intl.formatMessage({ id: 'EditListingPhotosForm.description' })}
+                  placeholder={intl.formatMessage({ id: 'EditListingPhotosForm.descriptionPlaceholder' })}
+                  validate={required(intl.formatMessage({ id: 'EditListingPhotosForm.descriptionRequired' }))}
+                  disabled={disabled}
+                />
+
+                {/* Category selection */}
+                <FieldSelect
+                  id="categoryLevel1"
+                  name="publicData.categoryLevel1"
+                  label="Category"
+                  validate={required('Please select a category')}
+                  disabled={disabled}
+                >
+                  <option value="">Select category</option>
+                  <option value="General_DIY__Home_Improvement">General DIY & Home Improvement</option>
+                  <option value="Carpentry__Woodworking">Carpentry & Woodworking</option>
+                  <option value="Plumbing__Bathrooms">Plumbing & Bathrooms</option>
+                  <option value="Electrical__Lighting">Electrical & Lighting</option>
+                  <option value="Garden__Outdoor">Garden & Outdoor</option>
+                  <option value="Automotive__Garage">Automotive & Garage</option>
+                  <option value="Cleaning__Maintenance">Cleaning & Maintenance</option>
+                  <option value="Building__Masonry">Building & Masonry</option>
+                  <option value="Craft__Upcycling">Craft & Upcycling</option>
+                </FieldSelect>
+
+                {/* Collection or Delivery selection */}
+                <FieldSelect
+                  id="collectionDelivery"
+                  name="publicData.Collection_or_Delivery"
+                  label="Collection or Delivery"
+                  validate={required('Please select collection or delivery option')}
+                  disabled={disabled}
+                >
+                  <option value="">Select option</option>
+                  <option value="Collect_from_My_Home">Collect from My Home</option>
+                  <option value="I_can_deliver_locally">I can deliver locally</option>
+                </FieldSelect>
+                
+                {/* Hidden fields for other required data */}
+                <Field name="publicData.listingType" render={() => null} />
+                <Field name="publicData.transactionProcessAlias" render={() => null} />
+                <Field name="publicData.unitType" render={() => null} />
+                <Field name="publicData.categoryLevel2" render={() => null} />
+                <Field name="publicData.categoryLevel3" render={() => null} />
+                <Field name="privateData" render={() => null} />
+              </div>
+            )}
+
             <PublishListingError error={publishListingError} />
             <ShowListingsError error={showListingsError} />
 
@@ -299,7 +344,7 @@ export const EditListingPhotosFormWithDraftCreation = props => {
               disabled={submitDisabled}
               ready={submitReady}
             >
-              {saveActionMsg}
+              Next
             </Button>
           </Form>
         );
@@ -308,13 +353,22 @@ export const EditListingPhotosFormWithDraftCreation = props => {
   );
 };
 
-EditListingPhotosFormWithDraftCreation.defaultProps = {
-  listingTypes: [],
-};
+// Removed defaultProps - using default parameters instead
 
 EditListingPhotosFormWithDraftCreation.propTypes = {
-  listingTypes: propTypes.array,
-  // ... other propTypes from the original form
+  className: PropTypes.string,
+  disabled: PropTypes.bool,
+  ready: PropTypes.bool,
+  fetchErrors: PropTypes.object,
+  initialValues: PropTypes.object,
+  onImageUpload: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  onRemoveImage: PropTypes.func.isRequired,
+  saveActionMsg: PropTypes.string,
+  updated: PropTypes.bool,
+  updateInProgress: PropTypes.bool,
+  listingImageConfig: PropTypes.object.isRequired,
+  listingTypes: PropTypes.array,
 };
 
 export default EditListingPhotosFormWithDraftCreation;

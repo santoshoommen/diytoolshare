@@ -17,16 +17,26 @@ const getInitialValues = (params, listing, isFirstTab) => {
   const { images = [] } = params;
   const baseValues = { images };
   
-  // If this is the first tab, include draft creation fields
-  if (isFirstTab && listing) {
-    const { title, description, publicData } = listing.attributes || {};
-    const { listingType } = publicData || {};
-    return {
+  // If this is the first tab, include title, description, and complete publicData for draft creation
+  if (isFirstTab) {
+    const { title, description, publicData } = listing?.attributes || {};
+    const initialValues = {
       ...baseValues,
       title: title || '',
       description: description || '',
-      listingType: listingType || '',
+      publicData: publicData || {
+        listingType: 'list-your-tool',
+        transactionProcessAlias: 'default-booking/release-1',
+        unitType: 'day',
+        categoryLevel1: 'General_DIY__Home_Improvement',
+        categoryLevel2: null,
+        categoryLevel3: null,
+        Collection_or_Delivery: 'Collect_from_My_Home'
+      },
+      privateData: {}
     };
+    
+    return initialValues;
   }
   
   return baseValues;

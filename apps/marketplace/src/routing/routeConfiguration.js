@@ -17,6 +17,7 @@ const CheckoutPage = loadable(() => import(/* webpackChunkName: "CheckoutPage" *
 const CMSPage = loadable(() => import(/* webpackChunkName: "CMSPage" */ '../containers/CMSPage/CMSPage'));
 const ContactDetailsPage = loadable(() => import(/* webpackChunkName: "ContactDetailsPage" */ '../containers/ContactDetailsPage/ContactDetailsPage'));
 const EditListingPage = loadable(() => import(/* webpackChunkName: "EditListingPage" */ '../containers/EditListingPage/EditListingPage'));
+const CustomListingPage = loadable(() => import(/* webpackChunkName: "CustomListingPage" */ '../containers/CustomListingPage/CustomListingPageContainer'));
 const EmailVerificationPage = loadable(() => import(/* webpackChunkName: "EmailVerificationPage" */ '../containers/EmailVerificationPage/EmailVerificationPage'));
 const InboxPage = loadable(() => import(/* webpackChunkName: "InboxPage" */ '../containers/InboxPage/InboxPage'));
 const LandingPage = loadable(() => import(/* webpackChunkName: "LandingPage" */ '../containers/LandingPage/LandingPage'));
@@ -164,6 +165,18 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       auth: true,
       component: EditListingPage,
       loadData: pageDataLoadingAPI.EditListingPage.loadData,
+    },
+    {
+      path: '/create-listing',
+      name: 'CustomListingPage',
+      auth: true,
+      component: CustomListingPage,
+    },
+    {
+      path: '/create-listing/:id',
+      name: 'CustomEditListingPage',
+      auth: true,
+      component: CustomListingPage,
     },
 
     // Canonical path should be after the `/l/new` path since they
