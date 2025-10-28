@@ -1,15 +1,49 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Form, Field } from 'react-final-form';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { Button, FieldTextInput, FieldSelect, FieldCheckbox } from '../';
+import { createInstance } from '../../util/sdkLoader';
+import appSettings from '../../config/settings';
+import * as apiUtils from '../../util/api';
 import css from './CustomListingForm.module.css';
 
 const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmitting = false }) => {
   const intl = useIntl();
+  const [uploadingImages, setUploadingImages] = useState(new Set());
+  const [uploadErrors, setUploadErrors] = useState({});
   
-  // Debug: Log the initial values received by the form
-  console.log('Form received initialValues:', initialValues);
-  console.log('Form postcode:', initialValues.postcode);
+  // Create SDK instance for image uploads
+  const sdk = useMemo(() => {
+    const baseUrl = appSettings.sdk.baseUrl ? { baseUrl: appSettings.sdk.baseUrl } : {};
+    const assetCdnBaseUrl = appSettings.sdk.assetCdnBaseUrl
+      ? { assetCdnBaseUrl: appSettings.sdk.assetCdnBaseUrl }
+      : {};
+    
+    return createInstance({
+      transitVerbose: appSettings.sdk.transitVerbose,
+      clientId: appSettings.sdk.clientId,
+      secure: appSettings.usingSSL,
+      typeHandlers: apiUtils.typeHandlers,
+      ...baseUrl,
+      ...assetCdnBaseUrl,
+    });
+  }, []);
+  
+  // Function to upload image to Sharetribe Flex
+  const uploadImageToFlex = useCallback(async (file) => {
+    try {
+      const response = await sdk.images.upload({ image: file });
+      return response.data.data.id.uuid; // Return the UUID
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      throw err;
+    }
+  }, [sdk]);
+  
+  // Debug: Log the initial values received by the form (only once)
+  // useEffect(() => {
+  //   console.log('Form received initialValues:', initialValues);
+  // }, []); // Empty dependency array to run only once
 
   // Memoize form initial values to prevent infinite re-renders
   const formInitialValues = useMemo(() => ({
@@ -23,15 +57,29 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
       saturday: initialValues.availability?.saturday ?? true,
       sunday: initialValues.availability?.sunday ?? true,
     }
-  }), [initialValues]);
+  }), [
+    initialValues.title,
+    initialValues.description,
+    initialValues.category,
+    initialValues.collectionDelivery,
+    initialValues.postcode,
+    initialValues.dailyPrice,
+    initialValues.availability?.monday,
+    initialValues.availability?.tuesday,
+    initialValues.availability?.wednesday,
+    initialValues.availability?.thursday,
+    initialValues.availability?.friday,
+    initialValues.availability?.saturday,
+    initialValues.availability?.sunday
+  ]);
 
   // Handle form submission
   const handleSubmit = useCallback((values) => {
-    // Prepare data for API
+    // Prepare data for API - pass images as array of objects with imageId/id
     const submitData = {
       title: values.title?.trim(),
       description: values.description?.trim(),
-      images: values.images || [],
+      images: values.images || [], // Pass images as-is, the duck will process them
       publicData: {
         listingType: 'list-your-tool',
         transactionProcessAlias: 'default-booking/release-1',
@@ -46,7 +94,9 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
         amount: parseFloat(values.dailyPrice) * 100, // Convert to cents
         currency: 'GBP'
       },
-      availability: values.availability
+      availability: values.availability,
+      postcode: values.postcode, // Include postcode for location handling
+      dailyPrice: values.dailyPrice // Include dailyPrice for price calculation
     };
     
     onSubmit(submitData);
@@ -65,9 +115,6 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
         initialValues={formInitialValues}
         onSubmit={handleSubmit}
         render={({ handleSubmit, values, errors, invalid, pristine, form }) => {
-          // Debug: Log current form values
-          console.log('Current form values:', values);
-          console.log('Postcode in form values:', values.postcode);
           
           return (
           <form className={css.form} onSubmit={handleSubmit}>
@@ -80,6 +127,17 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                 {(input.value || []).map((image, index) => (
                   <div key={index} className={css.photoItem}>
                     <img src={image.url || image} alt={`Upload ${index + 1}`} className={css.photo} />
+                    {image.id && image.id.startsWith('temp-') && uploadingImages.has(image.id) && (
+                      <div className={css.uploadingOverlay}>
+                        <div className={css.uploadingSpinner}>⏳</div>
+                        <span>Uploading...</span>
+                      </div>
+                    )}
+                    {image.id && image.id.startsWith('temp-') && uploadErrors[image.id] && (
+                      <div className={css.errorOverlay}>
+                        <span className={css.errorText}>{uploadErrors[image.id]}</span>
+                      </div>
+                    )}
                     <button 
                       type="button" 
                       className={css.removePhoto}
@@ -98,28 +156,73 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                   type="file"
                   accept="image/*"
                   className={css.fileInput}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files[0];
                     if (file) {
-                      // Create a preview URL for the image
-                      const imageUrl = URL.createObjectURL(file);
-                      const newImage = {
-                        id: `temp-${Date.now()}`,
-                        url: imageUrl,
-                        file: file
-                      };
+                      const tempId = `temp-${Date.now()}`;
                       
-                      // Add to existing images
-                      const currentImages = input.value || [];
-                      input.onChange([...currentImages, newImage]);
+                      try {
+                        // Add to uploading state
+                        setUploadingImages(prev => new Set([...prev, tempId]));
+                        setUploadErrors(prev => {
+                          const newErrors = { ...prev };
+                          delete newErrors[tempId];
+                          return newErrors;
+                        });
+                        
+                        // Create a preview URL for immediate display
+                        const imageUrl = URL.createObjectURL(file);
+                        
+                        // Upload to Sharetribe Flex
+                        const imageId = await uploadImageToFlex(file);
+                        
+                        // Create the image object with both preview and real ID
+                        const newImage = {
+                          id: imageId,
+                          imageId: imageId,
+                          url: imageUrl, // Keep for preview
+                          fileName: file.name
+                        };
+                        
+                        // Add to existing images
+                        const currentImages = input.value || [];
+                        input.onChange([...currentImages, newImage]);
+                        
+                        // Remove from uploading state
+                        setUploadingImages(prev => {
+                          const newSet = new Set(prev);
+                          newSet.delete(tempId);
+                          return newSet;
+                        });
+                        
+                      } catch (error) {
+                        console.error('Failed to upload image:', error);
+                        
+                        // Set error state
+                        setUploadErrors(prev => ({
+                          ...prev,
+                          [tempId]: 'Failed to upload image. Please try again.'
+                        }));
+                        
+                        // Remove from uploading state
+                        setUploadingImages(prev => {
+                          const newSet = new Set(prev);
+                          newSet.delete(tempId);
+                          return newSet;
+                        });
+                      }
                     }
                     // Reset the input so the same file can be selected again
                     e.target.value = '';
                   }}
                 />
                 <div className={css.addPhotoContent}>
-                  <div className={css.uploadIcon}>↑</div>
-                  <span>Add Photo</span>
+                  <div className={css.uploadIcon}>
+                    {uploadingImages.size > 0 ? '⏳' : '↑'}
+                  </div>
+                  <span>
+                    {uploadingImages.size > 0 ? 'Uploading...' : 'Add Photo'}
+                  </span>
                 </div>
               </div>
                 )}
@@ -201,6 +304,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
               )}
             </Field>
           </div>
+
         </div>
 
         {/* Location Section */}

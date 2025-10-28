@@ -6,7 +6,8 @@ import {
   requestCreateListingDraft,
   requestUpdateListing,
   requestImageUpload,
-  requestShowListing
+  requestShowListing,
+  requestPublishListingDraft
 } from '../EditListingPage/EditListingPage.duck';
 
 import CustomListingPage from './CustomListingPage';
@@ -24,8 +25,11 @@ const mapStateToProps = (state, ownProps) => {
     listing
   } = state.EditListingPage;
 
+  const { currentUser } = state.user;
+
   return {
     listing,
+    currentUser,
     errors: {
       createListingDraftError,
       updateListingError,
@@ -42,7 +46,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     onCreateListingDraft: (values, config) => dispatch(requestCreateListingDraft(values, config)),
     onUpdateListing: (tab, values) => dispatch(requestUpdateListing(tab, values)),
     onImageUpload: (imageData, imageConfig) => dispatch(requestImageUpload(imageData, imageConfig)),
-    onShowListings: () => dispatch(requestShowListing())
+    onShowListings: () => dispatch(requestShowListing()),
+    onPublishListingDraft: (listingId) => dispatch(requestPublishListingDraft(listingId))
   };
 };
 

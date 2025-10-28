@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { useConfiguration } from '../../context/configurationContext';
@@ -10,7 +10,9 @@ const CustomListingPage = ({
   onCreateListingDraft, 
   onUpdateListing, 
   onImageUpload,
+  onPublishListingDraft,
   listing,
+  currentUser,
   errors = {},
   fetchInProgress = false 
 }) => {
@@ -18,6 +20,10 @@ const CustomListingPage = ({
   const intl = useIntl();
   const config = useConfiguration();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Extract postcode from current user's profile
+  const userPostcode = currentUser?.attributes?.profile?.publicData?.postcode || '';
+  console.log('User postcode from profile:', userPostcode);
 
   // Handle form submission
   const handleSubmit = useCallback(async (formData) => {
@@ -27,90 +33,104 @@ const CustomListingPage = ({
     console.log('Form data received:', formData);
     console.log('Postcode value:', formData.postcode);
     console.log('Has postcode:', !!formData.postcode);
+    console.log('Availability data:', formData.availability);
+    console.log('Daily price from form:', formData.dailyPrice);
+    console.log('Price object from form:', formData.price);
     
     try {
-      // First, upload any images that have files
-      let uploadedImages = [];
-      if (formData.images && formData.images.length > 0) {
-        for (const image of formData.images) {
-          if (image.file) {
-            // Upload the image file
-            const uploadResult = await onImageUpload({
-              id: image.id,
-              file: image.file
-            }, config.layout.listingImage);
-            if (uploadResult?.data?.data?.id) {
-              const imageId = uploadResult.data.data.id.uuid || uploadResult.data.data.id;
-              uploadedImages.push(imageId);
-            }
-          } else if (image.id && !image.id.startsWith('temp-')) {
-            // This is already an uploaded image with a real UUID
-            uploadedImages.push(image.id);
-          }
-        }
-      }
+      // Use images from form data - they should already be uploaded and have proper IDs
+      console.log('Form images:', formData.images);
+      console.log('Images being sent to API:', formData.images);
 
-      // Prepare the data for the API
+      // Prepare the data for the API - only include allowed fields
       const listingData = {
         title: formData.title,
         description: formData.description,
-        images: uploadedImages, // Use the uploaded image UUIDs
+        images: formData.images, // This will be processed by imageIds function in the duck
         publicData: {
-          ...formData.publicData,
-          // Location data
-          location: formData.postcode ? { address: formData.postcode } : null,
-        },
-        privateData: formData.privateData,
-        price: formData.price,
-        // Location coordinates (required for location tab completion)
-        // Only include geolocation if we have a postcode
-        ...(formData.postcode && {
-          geolocation: {
-            lat: 51.5074, // Default to London coordinates for now
-            lng: -0.1278
-          }
-        }),
-        // Availability plan (required for availability tab completion)
-        availabilityPlan: {
-          type: 'availability-plan/time',
-          timezone: 'Europe/London', // Default timezone
-          entries: [
-            // Create availability entries for each day that's selected
-            ...Object.entries(formData.availability)
-              .filter(([day, isAvailable]) => isAvailable)
-              .map(([day, isAvailable]) => ({
-                dayOfWeek: day.substring(0, 3), // Convert 'monday' to 'mon', etc.
-                startTime: '09:00',
-                endTime: '17:00',
-                seats: 1
-              }))
+          listingType: 'list-your-tool',
+          transactionProcessAlias: 'default-booking/release-1',
+          unitType: 'day',
+          categoryLevel1: formData.category,
+          categoryLevel2: null,
+          categoryLevel3: null,
+          Collection_or_Delivery: formData.collectionDelivery,
+          // Location data - match the structure from default form
+          location: formData.postcode ? { 
+            address: formData.postcode,
+            building: formData.postcode // Use postcode as building for now
+          } : null,
+          // Price variants to match default form structure
+          priceVariationsEnabled: true,
+          priceVariants: [
+            {
+              name: "Standard for < 5days",
+              priceInSubunits: Math.round(parseFloat(formData.dailyPrice || formData.price?.amount || 0) * 100)
+            },
+            {
+              name: "For > 5days", 
+              priceInSubunits: Math.round(parseFloat(formData.dailyPrice || formData.price?.amount || 0) * 100 * 0.7) // 30% discount for longer rentals
+            }
           ]
+        },
+        privateData: {},
+        // Add price data
+        price: {
+          amount: Math.round(parseFloat(formData.dailyPrice || formData.price?.amount || 0) * 100), // Convert to cents
+          currency: 'GBP'
         }
       };
 
       // Debug: Log the final listing data
       console.log('Final listing data:', listingData);
-      console.log('Geolocation included:', !!listingData.geolocation);
+      console.log('Images being sent:', listingData.images);
+      console.log('Private data being sent:', listingData.privateData);
+      console.log('Price being sent:', listingData.price);
+      console.log('Public data being sent:', listingData.publicData);
+      console.log('Location data:', listingData.publicData.location);
+      console.log('Price variants:', listingData.publicData.priceVariants);
+      console.log('Price variations enabled:', listingData.publicData.priceVariationsEnabled);
 
       // If editing existing listing
       if (listing?.id) {
         await onUpdateListing('photos', { ...listingData, id: listing.id });
       } else {
-        // Create new listing
-        const result = await onCreateListingDraft(listingData, config);
+        // Create new listing draft first
+        const draftResult = await onCreateListingDraft(listingData, config);
         
         // Debug: Log the result structure
-        console.log('Create listing result:', result);
-        console.log('Listing ID:', result?.data?.data?.id);
+        console.log('Create listing draft result:', draftResult);
+        console.log('Draft Listing ID:', draftResult?.data?.data?.id);
         
-        // Redirect to the listings management page after successful creation
-        if (result?.data?.data?.id) {
-          console.log('Listing created successfully, redirecting to listings page');
-          history.push('/listings');
+        // If draft was created successfully, publish it immediately
+        if (draftResult?.data?.data?.id) {
+          console.log('Draft created successfully, now publishing...');
+          
+          try {
+            const publishResult = await onPublishListingDraft(draftResult.data.data.id);
+            console.log('Publish result:', publishResult);
+            
+            // Redirect to the listings management page after successful publication
+            console.log('Listing published successfully, redirecting to listings page');
+            history.push('/listings');
+          } catch (publishError) {
+            console.error('Error publishing listing:', publishError);
+            // Even if publishing fails, redirect to listings page so user can manually publish
+            console.log('Publishing failed, but draft exists. Redirecting to listings page.');
+            history.push('/listings');
+          }
         }
       }
     } catch (error) {
       console.error('Error submitting listing:', error);
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      // Log API validation errors if available
+      if (error.response && error.response.data && error.response.data.errors) {
+        console.error('API Validation Errors:', error.response.data.errors);
+      }
+      
       // Error handling is done by the parent component
     } finally {
       setIsSubmitting(false);
@@ -157,12 +177,12 @@ const CustomListingPage = ({
         sunday: true,
       }
     } : {
-      // Default values for new listings
+      // Default values for new listings - use user's postcode if available
       title: '',
       description: '',
       category: '',
       collectionDelivery: 'Collect_from_My_Home',
-      postcode: '',
+      postcode: userPostcode, // Use user's postcode from profile
       dailyPrice: '',
       images: [],
       availability: {
@@ -175,11 +195,14 @@ const CustomListingPage = ({
         sunday: true,
       }
     };
-  }, [listing]);
+  }, [listing, userPostcode]);
 
-  // Debug: Log the initial values being passed to the form
-  console.log('Initial values being passed to form:', initialValues);
-  console.log('Postcode in initial values:', initialValues.postcode);
+  // Debug: Log the initial values being passed to the form (only when listing changes)
+  useEffect(() => {
+    if (listing) {
+      console.log('Initial values for existing listing:', initialValues);
+    }
+  }, [listing]);
 
   return (
     <div className={css.root}>
