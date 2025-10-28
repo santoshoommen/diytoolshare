@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage } from 'react-intl';
 import classNames from 'classnames';
-import { IconSpinner, IconCheck, IconAlert } from '../../components';
+import { IconSpinner, IconCheckmark, IconAlert } from '../../components';
 import imageClassificationService from '../../services/imageClassification';
 import { getToolDescription } from '../../data/toolDescriptions';
 import css from './ImageClassification.css';
@@ -138,7 +138,7 @@ const ImageClassification = props => {
       {classificationResult && !error && (
         <div className={css.resultsContainer}>
           <div className={css.classificationHeader}>
-            <IconCheck className={css.successIcon} />
+                <IconCheckmark className={css.successIcon} />
             <h4 className={css.classificationTitle}>
               <FormattedMessage 
                 id="ImageClassification.classificationComplete" 
@@ -214,7 +214,7 @@ const ImageClassification = props => {
 
           {suggestionAccepted && (
             <div className={css.acceptedContainer}>
-              <IconCheck className={css.acceptedIcon} />
+              <IconCheckmark className={css.acceptedIcon} />
               <span className={css.acceptedText}>
                 <FormattedMessage 
                   id="ImageClassification.suggestionAccepted" 

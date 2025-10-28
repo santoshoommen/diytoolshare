@@ -5,12 +5,15 @@ import { Button, FieldTextInput, FieldSelect, FieldCheckbox } from '../';
 import { createInstance } from '../../util/sdkLoader';
 import appSettings from '../../config/settings';
 import * as apiUtils from '../../util/api';
+import ImageClassification from '../ImageClassification/ImageClassification';
 import css from './CustomListingForm.module.css';
 
 const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmitting = false }) => {
   const intl = useIntl();
   const [uploadingImages, setUploadingImages] = useState(new Set());
   const [uploadErrors, setUploadErrors] = useState({});
+  const [lastUploadedImage, setLastUploadedImage] = useState(null);
+  const [classificationResult, setClassificationResult] = useState(null);
   
   // Create SDK instance for image uploads
   const sdk = useMemo(() => {
@@ -39,6 +42,45 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
       throw err;
     }
   }, [sdk]);
+
+  // Handle classification completion
+  const handleClassificationComplete = useCallback((result) => {
+    console.log('Classification completed:', result);
+    setClassificationResult(result);
+  }, []);
+
+  // Handle suggestion acceptance - auto-populate form fields
+  const handleSuggestionAccepted = useCallback((suggestion, formApi) => {
+    console.log('Suggestion accepted:', suggestion);
+    
+    if (suggestion && formApi) {
+      // Auto-populate title and description
+      if (suggestion.title) {
+        formApi.change('title', suggestion.title);
+      }
+      if (suggestion.description) {
+        formApi.change('description', suggestion.description);
+      }
+      if (suggestion.category) {
+        // Map the category to our form's category values
+        const categoryMapping = {
+          'Power Tools': 'General_DIY__Home_Improvement',
+          'Hand Tools': 'General_DIY__Home_Improvement',
+          'Garden Tools': 'Garden__Outdoor',
+          'Automotive Tools': 'Automotive__Garage',
+          'Cleaning Tools': 'Cleaning__Maintenance'
+        };
+        const mappedCategory = categoryMapping[suggestion.category] || 'General_DIY__Home_Improvement';
+        formApi.change('category', mappedCategory);
+      }
+    }
+  }, []);
+
+  // Handle suggestion rejection
+  const handleSuggestionRejected = useCallback((result) => {
+    console.log('Suggestion rejected:', result);
+    setClassificationResult(null);
+  }, []);
   
   // Debug: Log the initial values received by the form (only once)
   // useEffect(() => {
@@ -188,6 +230,9 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                         const currentImages = input.value || [];
                         input.onChange([...currentImages, newImage]);
                         
+                        // Set the last uploaded image for classification
+                        setLastUploadedImage(file);
+                        
                         // Remove from uploading state
                         setUploadingImages(prev => {
                           const newSet = new Set(prev);
@@ -230,6 +275,20 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
             )}
           </Field>
         </div>
+
+        {/* Image Classification Section */}
+        {lastUploadedImage && (
+          <div className={css.section}>
+            <h2 className={css.sectionTitle}>AI Tool Recognition</h2>
+            <ImageClassification
+              imageFile={lastUploadedImage}
+              onClassificationComplete={handleClassificationComplete}
+              onSuggestionAccepted={(suggestion) => handleSuggestionAccepted(suggestion, form)}
+              onSuggestionRejected={handleSuggestionRejected}
+              disabled={isSubmitting}
+            />
+          </div>
+        )}
 
         {/* Listing Details Section */}
         <div className={css.section}>
