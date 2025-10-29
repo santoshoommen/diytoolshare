@@ -12,8 +12,51 @@ class ImageClassificationService {
     this.model = null;
     this.isLoading = false;
     this.isLoaded = false;
-    this.modelPath = '/models/model.json';
+    // Use absolute URL for production environments
+    this.modelPath = this.getModelPath();
     this.confidenceThreshold = 0.7; // Minimum confidence for auto-population
+  }
+
+  /**
+   * Get the correct model path based on environment
+   * @returns {string} Model path
+   */
+  getModelPath() {
+    // In production, use absolute URL to ensure proper loading
+    if (typeof window !== 'undefined') {
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/models/model.json`;
+    }
+    // Fallback for server-side rendering
+    return '/models/model.json';
+  }
+
+  /**
+   * Try multiple model paths if the primary one fails
+   * @returns {Promise<string>} Working model path
+   */
+  async findWorkingModelPath() {
+    const possiblePaths = [
+      this.modelPath,
+      '/models/model.json',
+      './models/model.json',
+      `${window.location.origin}/models/model.json`
+    ];
+
+    for (const path of possiblePaths) {
+      try {
+        console.log(`Trying model path: ${path}`);
+        const response = await fetch(path);
+        if (response.ok) {
+          console.log(`Found working model path: ${path}`);
+          return path;
+        }
+      } catch (error) {
+        console.log(`Path ${path} failed:`, error.message);
+      }
+    }
+    
+    throw new Error('No working model path found');
   }
 
   /**
@@ -36,15 +79,45 @@ class ImageClassificationService {
     try {
       this.isLoading = true;
       console.log('Loading TensorFlow.js model...');
+      console.log('Model path:', this.modelPath);
+      console.log('Current URL:', typeof window !== 'undefined' ? window.location.href : 'N/A');
       
-      this.model = await tf.loadLayersModel(this.modelPath);
+      // Test if the model file is accessible, try fallback paths if needed
+      let workingPath = this.modelPath;
+      try {
+        const response = await fetch(this.modelPath);
+        if (!response.ok) {
+          console.log('Primary model path failed, trying fallback paths...');
+          workingPath = await this.findWorkingModelPath();
+        } else {
+          console.log('Model file is accessible');
+        }
+      } catch (fetchError) {
+        console.log('Primary model path failed, trying fallback paths...');
+        try {
+          workingPath = await this.findWorkingModelPath();
+        } catch (fallbackError) {
+          console.error('All model paths failed:', fallbackError);
+          throw new Error(`Model file not accessible. Tried: ${this.modelPath} and fallback paths`);
+        }
+      }
+      
+      console.log(`Loading model from: ${workingPath}`);
+      this.model = await tf.loadLayersModel(workingPath);
       this.isLoaded = true;
       this.isLoading = false;
       
       console.log('Model loaded successfully');
+      console.log('Model input shape:', this.model.inputs[0].shape);
       return true;
     } catch (error) {
       console.error('Failed to load model:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        modelPath: this.modelPath,
+        currentUrl: typeof window !== 'undefined' ? window.location.href : 'N/A'
+      });
       this.isLoading = false;
       this.isLoaded = false;
       return false;
@@ -81,9 +154,13 @@ class ImageClassificationService {
    * @returns {Promise<Object>} Classification results
    */
   async classifyImage(imageInput) {
+    console.log('Starting image classification...');
+    
     if (!this.isLoaded) {
+      console.log('Model not loaded, attempting to load...');
       const loaded = await this.loadModel();
       if (!loaded) {
+        console.error('Failed to load model for classification');
         throw new Error('Failed to load model');
       }
     }
@@ -93,19 +170,25 @@ class ImageClassificationService {
       
       // Handle different input types
       if (imageInput instanceof File) {
+        console.log('Processing file input...');
         imageElement = await this.fileToImageElement(imageInput);
       } else if (imageInput instanceof HTMLImageElement || imageInput instanceof HTMLCanvasElement) {
+        console.log('Processing image element input...');
         imageElement = imageInput;
       } else {
         throw new Error('Invalid image input type');
       }
 
+      console.log('Preprocessing image...');
       // Preprocess image
       const preprocessedImage = this.preprocessImage(imageElement);
       
+      console.log('Running model prediction...');
       // Run prediction
       const predictions = this.model.predict(preprocessedImage);
       const predictionArray = await predictions.data();
+      
+      console.log('Raw predictions:', predictionArray);
       
       // Clean up tensors
       preprocessedImage.dispose();
@@ -113,12 +196,17 @@ class ImageClassificationService {
       
       // Get class labels (you'll need to update this based on your model)
       const classLabels = this.getClassLabels();
+      console.log('Class labels:', classLabels);
       
       // Format results
       const results = classLabels.map((label, index) => ({
         className: label,
         confidence: predictionArray[index]
       })).sort((a, b) => b.confidence - a.confidence);
+
+      console.log('Classification results:', results);
+      console.log('Top prediction:', results[0]);
+      console.log('Is confident:', results[0].confidence >= this.confidenceThreshold);
 
       return {
         success: true,
@@ -129,6 +217,14 @@ class ImageClassificationService {
       
     } catch (error) {
       console.error('Classification error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        imageInputType: typeof imageInput,
+        isFile: imageInput instanceof File,
+        isImageElement: imageInput instanceof HTMLImageElement,
+        isCanvas: imageInput instanceof HTMLCanvasElement
+      });
       return {
         success: false,
         error: error.message,
