@@ -22,13 +22,19 @@ class ImageClassificationService {
    * @returns {string} Model path
    */
   getModelPath() {
+    // In development, use the public folder path
+    if (process.env.NODE_ENV === 'development') {
+      return '/models/model.json';
+    }
+    
     // In production, use absolute URL to ensure proper loading
     if (typeof window !== 'undefined') {
       const baseUrl = window.location.origin;
-      return `${baseUrl}/models/model.json`;
+      // Try both static and public paths for different deployment scenarios
+      return `${baseUrl}/static/models/model.json`;
     }
     // Fallback for server-side rendering
-    return '/models/model.json';
+    return '/static/models/model.json';
   }
 
   /**
@@ -36,10 +42,22 @@ class ImageClassificationService {
    * @returns {Promise<string>} Working model path
    */
   async findWorkingModelPath() {
-    const possiblePaths = [
+    const isDev = process.env.NODE_ENV === 'development';
+    const possiblePaths = isDev ? [
+      // Development paths - prioritize public folder
       this.modelPath,
       '/models/model.json',
       './models/model.json',
+      '/static/models/model.json',
+      `${window.location.origin}/models/model.json`,
+      `${window.location.origin}/static/models/model.json`
+    ] : [
+      // Production paths - prioritize static folder
+      this.modelPath,
+      '/static/models/model.json',
+      '/models/model.json',
+      './models/model.json',
+      `${window.location.origin}/static/models/model.json`,
       `${window.location.origin}/models/model.json`
     ];
 

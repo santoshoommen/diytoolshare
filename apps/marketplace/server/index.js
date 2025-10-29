@@ -156,6 +156,8 @@ if (TRUST_PROXY === 'true') {
 
 app.use(compression());
 app.use('/static', express.static(path.join(buildPath, 'static')));
+// Serve TensorFlow.js models from build/models as a fallback path
+app.use('/models', express.static(path.join(buildPath, 'models')));
 app.use(cookieParser());
 
 // We don't serve favicon.ico from root. PNG images are used instead for icons through link elements.
