@@ -42,6 +42,7 @@ async function fetchFromSanity({ perspective = 'published' } = {}) {
     title,
     description,
     category,
+    categoryRef->{ _id, value, label },
     subcategory,
     price,
     features,
@@ -59,12 +60,15 @@ async function fetchFromSanity({ perspective = 'published' } = {}) {
     if (k) {
       const normLower = k.toLowerCase();
       const normSlug = normLower.replace(/\s+/g, '_');
+      const categoryValue = doc.categoryRef?.value || doc.category || null;
+      const categoryLabel = doc.categoryRef?.label || null;
       byClass[k] = {
         key: doc.key || k,
         className: doc.className || k,
         title: doc.title,
         description: doc.description,
-        category: doc.category,
+        category: categoryValue,
+        categoryLabel,
         subcategory: doc.subcategory,
         price: doc.price,
         features: doc.features || [],

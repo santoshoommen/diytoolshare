@@ -261,7 +261,7 @@
 .checkbox {
   width: 18px;
   height: 18px;
-  accent-color: #007bff;
+  accent-color: var(--colorBlack);
   cursor: pointer;
 }
 
@@ -280,19 +280,19 @@
 
 .submitButton {
   width: 100%;
-  background: #007bff;
+  background: var(--colorBlack);
   color: white;
   border: none;
-  padding: 16px 24px;
+  padding: 8px;
   border-radius: 8px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .submitButton:hover:not(:disabled) {
-  background: #0056b3;
+  background: var(--colorGrey800);
 }
 
 .submitButton:disabled {

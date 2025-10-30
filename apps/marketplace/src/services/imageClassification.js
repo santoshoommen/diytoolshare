@@ -14,7 +14,7 @@ class ImageClassificationService {
     this.isLoaded = false;
     // Use absolute URL for production environments
     this.modelPath = this.getModelPath();
-    this.confidenceThreshold = 0.7; // Minimum confidence for auto-population
+    this.confidenceThreshold = 0.5; // Minimum confidence for auto-population (stricter)
   }
 
   /**

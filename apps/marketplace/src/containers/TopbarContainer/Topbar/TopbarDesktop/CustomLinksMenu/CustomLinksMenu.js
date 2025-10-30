@@ -14,8 +14,8 @@ const createListingLinkConfigMaybe = (intl, showLink) =>
           text: intl.formatMessage({ id: 'TopbarDesktop.createListing' }),
           type: 'internal',
           route: {
-            name: 'EditListingPage',
-            params: { slug: 'draft', id: draftId, type: 'new', tab: 'details' },
+            name: 'CustomListingPage',
+            to: { search: '', hash: '', state: {} },
           },
           highlight: true,
         },

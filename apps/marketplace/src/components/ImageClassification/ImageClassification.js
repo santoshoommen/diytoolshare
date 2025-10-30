@@ -5,6 +5,7 @@ import { IconSpinner, IconCheckmark, IconAlert } from '../../components';
 import imageClassificationService from '../../services/imageClassification';
 import toolDescriptionsClient from '../../services/toolDescriptionsClient';
 import css from './ImageClassification.css';
+import categoriesClient from '../../services/categoriesClient';
 
 /**
  * Image Classification Component
@@ -19,6 +20,8 @@ const ImageClassification = props => {
     onClassificationComplete,
     onSuggestionAccepted,
     onSuggestionRejected,
+    onWriteOwn,
+    onRetryUpload,
     className,
     rootClassName,
     disabled = false
@@ -29,6 +32,7 @@ const ImageClassification = props => {
   const [suggestionAccepted, setSuggestionAccepted] = useState(false);
   const [toolDescription, setToolDescription] = useState(null);
   const [error, setError] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // Classify image when imageFile changes
   useEffect(() => {
@@ -99,6 +103,7 @@ const ImageClassification = props => {
     if (onSuggestionRejected) {
       onSuggestionRejected(classificationResult);
     }
+    if (onWriteOwn) onWriteOwn();
     setSuggestionAccepted(false);
   };
 
@@ -111,6 +116,16 @@ const ImageClassification = props => {
   const rootClasses = classNames(rootClassName || css.root, className);
   const isConfident = classificationResult?.isConfident;
   const topPrediction = classificationResult?.topPrediction;
+
+  // Build preview URL for the selected file
+  useEffect(() => {
+    if (imageFile instanceof File) {
+      const url = URL.createObjectURL(imageFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    return undefined;
+  }, [imageFile]);
 
   return (
     <div className={rootClasses}>
@@ -140,115 +155,67 @@ const ImageClassification = props => {
 
       {classificationResult && !error && (
         <div className={css.resultsContainer}>
-          <div className={css.classificationHeader}>
-                <IconCheckmark className={css.successIcon} />
-            <h4 className={css.classificationTitle}>
-              <FormattedMessage 
-                id="ImageClassification.classificationComplete" 
-                defaultMessage="Image Analysis Complete" 
-              />
-            </h4>
-          </div>
-
-          <div className={css.predictionContainer}>
-            <div className={css.predictionInfo}>
-              <span className={css.predictedTool}>
-                {toolDescription?.title || topPrediction.className}
-              </span>
-              <span className={classNames(css.confidence, {
-                [css.highConfidence]: isConfident,
-                [css.lowConfidence]: !isConfident
-              })}>
-                {Math.round(topPrediction.confidence * 100)}% confidence
-              </span>
-            </div>
-
-            {!isConfident && (
-              <div className={css.lowConfidenceWarning}>
-                <IconAlert className={css.warningIcon} />
-                <span>
-                  <FormattedMessage 
-                    id="ImageClassification.lowConfidence" 
-                    defaultMessage="Low confidence - please verify the suggestion" 
-                  />
-                </span>
-              </div>
-            )}
-          </div>
-
-          {!suggestionAccepted && (
-            <div className={css.suggestionContainer}>
-              <h5 className={css.suggestionTitle}>
-                <FormattedMessage 
-                  id="ImageClassification.suggestion" 
-                  defaultMessage="Suggested Description:" 
-                />
-              </h5>
-              <p className={css.suggestionDescription}>
-                {toolDescription?.description}
-              </p>
-              
-              <div className={css.actionButtons}>
+          {(!isConfident || !toolDescription?.title) ? (
+            <>
+              <h4 className={css.sectionTitle}>We couldn’t auto‑identify this tool</h4>
+              {previewUrl ? (
+                <div className={css.previewWrapper}>
+                  <img src={previewUrl} alt="Selected" className={css.previewImage} />
+                </div>
+              ) : null}
+              <p className={css.confirmText}>Couldn’t auto-identify this tool. Try a clearer photo or add details manually.</p>
+              <div className={`${css.actionButtonsConfirm || ''} actionButtonsConfirm`}>
                 <button
                   type="button"
-                  className={css.acceptButton}
-                  onClick={handleAcceptSuggestion}
+                  className={`${css.acceptButton || ''} acceptButton`}
+                  onClick={() => onRetryUpload && onRetryUpload()}
                   disabled={disabled}
                 >
-                  <FormattedMessage 
-                    id="ImageClassification.acceptSuggestion" 
-                    defaultMessage="Use This Description" 
-                  />
+                  Try again
                 </button>
                 <button
                   type="button"
-                  className={css.rejectButton}
+                  className={`${css.rejectButton || ''} rejectButton`}
                   onClick={handleRejectSuggestion}
                   disabled={disabled}
                 >
-                  <FormattedMessage 
-                    id="ImageClassification.rejectSuggestion" 
-                    defaultMessage="Write My Own" 
-                  />
+                  Add manually
                 </button>
               </div>
-            </div>
-          )}
-
-          {suggestionAccepted && (
-            <div className={css.acceptedContainer}>
-              <IconCheckmark className={css.acceptedIcon} />
-              <span className={css.acceptedText}>
-                <FormattedMessage 
-                  id="ImageClassification.suggestionAccepted" 
-                  defaultMessage="Description applied successfully!" 
-                />
-              </span>
-            </div>
-          )}
-
-          {/* Show additional predictions if confidence is low */}
-          {!isConfident && classificationResult.predictions.length > 1 && (
-            <div className={css.alternativePredictions}>
-              <h6 className={css.alternativesTitle}>
-                <FormattedMessage 
-                  id="ImageClassification.alternatives" 
-                  defaultMessage="Other possibilities:" 
-                />
-              </h6>
-              <ul className={css.alternativesList}>
-                {classificationResult.predictions.slice(1, 4).map((prediction, index) => (
-                  <li key={index} className={css.alternativeItem}>
-                    <span className={css.alternativeName}>
-                      {prediction.className}
-                    </span>
-                    <span className={css.alternativeConfidence}>
-                      {Math.round(prediction.confidence * 100)}%
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            </>
+          ) : (
+            <>
+              <h4 className={css.sectionTitle}>Confirm Tool Details</h4>
+              {previewUrl ? (
+                <div className={css.previewWrapper}>
+                  <img src={previewUrl} alt="Selected" className={css.previewImage} />
+                </div>
+              ) : null}
+              <p className={css.confirmText}>
+                Are you trying to upload a listing for{' '}
+                <strong>{toolDescription?.title || topPrediction.className}</strong>{' '}under{' '}
+                <strong>{toolDescription?.categoryLabel || categoriesClient.getLabel(toolDescription?.category) || 'Tools'}</strong>
+                ?
+              </p>
+              <div className={`${css.actionButtonsConfirm || ''} actionButtonsConfirm`}>
+                <button
+                  type="button"
+                  className={`${css.acceptButton || ''} acceptButton`}
+                  onClick={handleAcceptSuggestion}
+                  disabled={disabled}
+                >
+                  Yes, that's correct
+                </button>
+                <button
+                  type="button"
+                  className={`${css.rejectButton || ''} rejectButton`}
+                  onClick={handleRejectSuggestion}
+                  disabled={disabled}
+                >
+                  Write My Own
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}

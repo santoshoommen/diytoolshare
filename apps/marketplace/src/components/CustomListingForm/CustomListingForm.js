@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Form, Field } from 'react-final-form';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { Button, FieldTextInput, FieldSelect, FieldCheckbox } from '../';
+import categoriesClient from '../../services/categoriesClient';
 import { createInstance } from '../../util/sdkLoader';
 import appSettings from '../../config/settings';
 import * as apiUtils from '../../util/api';
@@ -14,6 +15,9 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
   const [uploadErrors, setUploadErrors] = useState({});
   const [lastUploadedImage, setLastUploadedImage] = useState(null);
   const [classificationResult, setClassificationResult] = useState(null);
+  const titleInputRef = useRef(null);
+  const [showTitleTip, setShowTitleTip] = useState(false);
+  const [categories, setCategories] = useState([]);
   
   // Create SDK instance for image uploads
   const sdk = useMemo(() => {
@@ -30,6 +34,17 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
       ...baseUrl,
       ...assetCdnBaseUrl,
     });
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await categoriesClient.ensureLoaded();
+        setCategories(categoriesClient.getAll());
+      } catch (e) {
+        setCategories([]);
+      }
+    })();
   }, []);
   
   // Function to upload image to Sharetribe Flex
@@ -71,6 +86,14 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
   // Handle suggestion rejection
   const handleSuggestionRejected = useCallback((result) => {
     setClassificationResult(null);
+  }, []);
+  
+  const handleWriteOwn = useCallback(() => {
+    setShowTitleTip(true);
+    if (titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }, []);
   
   // Debug: Log the initial values received by the form (only once)
@@ -175,8 +198,14 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                       type="button" 
                       className={css.removePhoto}
                       onClick={() => {
-                        const newImages = (input.value || []).filter((_, i) => i !== index);
+                        const current = input.value || [];
+                        const newImages = current.filter((_, i) => i !== index);
                         input.onChange(newImages);
+                        // If first image was removed or list is now empty, clear AI classification UI
+                        if (index === 0 || newImages.length === 0) {
+                          setLastUploadedImage(null);
+                          setClassificationResult(null);
+                        }
                       }}
                     >
                       ×
@@ -220,9 +249,11 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                         // Add to existing images
                         const currentImages = input.value || [];
                         input.onChange([...currentImages, newImage]);
-                        
-                        // Set the last uploaded image for classification
-                        setLastUploadedImage(file);
+
+                        // Only trigger AI classification for the first photo
+                        if (currentImages.length === 0) {
+                          setLastUploadedImage(file);
+                        }
                         
                         // Remove from uploading state
                         setUploadingImages(prev => {
@@ -270,12 +301,19 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
         {/* Image Classification Section */}
         {lastUploadedImage && (
           <div className={css.section}>
-            <h2 className={css.sectionTitle}>AI Tool Recognition</h2>
             <ImageClassification
               imageFile={lastUploadedImage}
               onClassificationComplete={handleClassificationComplete}
               onSuggestionAccepted={(suggestion) => handleSuggestionAccepted(suggestion, form)}
               onSuggestionRejected={handleSuggestionRejected}
+              onWriteOwn={handleWriteOwn}
+              onRetryUpload={() => {
+                const imgs = form.getState().values.images || [];
+                if (imgs.length > 0) {
+                  form.change('images', imgs.slice(1));
+                }
+                setLastUploadedImage(null);
+              }}
               disabled={isSubmitting}
             />
           </div>
@@ -297,7 +335,11 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                     type="text"
                     placeholder="Enter tool name"
                     className={css.input}
+                    ref={el => { titleInputRef.current = el; }}
                   />
+                  {showTitleTip && (
+                    <div className={css.helpText}>Start writing your own title and description.</div>
+                  )}
                   {meta.error && meta.touched && <div className={css.error}>{meta.error}</div>}
                 </>
               )}
@@ -313,15 +355,9 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                 <>
                   <select {...input} className={css.select}>
                     <option value="">Select category</option>
-                    <option value="General_DIY__Home_Improvement">General DIY & Home Improvement</option>
-                    <option value="Carpentry__Woodworking">Carpentry & Woodworking</option>
-                    <option value="Plumbing__Bathrooms">Plumbing & Bathrooms</option>
-                    <option value="Electrical__Lighting">Electrical & Lighting</option>
-                    <option value="Garden__Outdoor">Garden & Outdoor</option>
-                    <option value="Automotive__Garage">Automotive & Garage</option>
-                    <option value="Cleaning__Maintenance">Cleaning & Maintenance</option>
-                    <option value="Building__Masonry">Building & Masonry</option>
-                    <option value="Craft__Upcycling">Craft & Upcycling</option>
+                    {categories.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
                   </select>
                   {meta.error && meta.touched && <div className={css.error}>{meta.error}</div>}
                 </>
@@ -348,8 +384,9 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
             <Field name="collectionDelivery">
               {({ input }) => (
                 <select {...input} className={css.select}>
-                  <option value="Collect_from_My_Home">Collect from My Home</option>
-                  <option value="I_can_deliver_locally">I can deliver locally</option>
+                  <option value="Collect_from_My_Home">Collection (agreed place)</option>
+                  <option value="I_can_deliver_locally">I deliver locally</option>
+                  <option value="Flexible">Flexible: delivery/collection</option>
                 </select>
               )}
             </Field>
