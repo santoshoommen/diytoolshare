@@ -40,10 +40,27 @@ export function getAllSync() {
   return cache;
 }
 
+export function getAllTools() {
+  const all = cache?.all || [];
+  return all.map(doc => {
+    const categoryValue = doc.categoryRef?.value || doc.category || null;
+    const categoryLabel = doc.categoryRef?.label || doc.categoryLabel || null;
+    return {
+      id: doc._id,
+      className: doc.className || doc.key,
+      title: doc.title,
+      category: categoryValue,
+      categoryLabel,
+      price: doc.price,
+    };
+  });
+}
+
 export default {
   ensureLoaded,
   getToolDescriptionSync,
   getAllSync,
+  getAllTools,
 };
 
 

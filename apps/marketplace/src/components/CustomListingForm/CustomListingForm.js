@@ -3,6 +3,7 @@ import { Form, Field } from 'react-final-form';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { Button, FieldTextInput, FieldSelect, FieldCheckbox } from '../';
 import categoriesClient from '../../services/categoriesClient';
+import toolDescriptionsClient from '../../services/toolDescriptionsClient';
 import { createInstance } from '../../util/sdkLoader';
 import appSettings from '../../config/settings';
 import * as apiUtils from '../../util/api';
@@ -18,6 +19,8 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
   const titleInputRef = useRef(null);
   const [showTitleTip, setShowTitleTip] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [titleSuggestions, setTitleSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
   // Create SDK instance for image uploads
   const sdk = useMemo(() => {
@@ -41,6 +44,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
       try {
         await categoriesClient.ensureLoaded();
         setCategories(categoriesClient.getAll());
+        await toolDescriptionsClient.ensureLoaded();
       } catch (e) {
         setCategories([]);
       }
@@ -70,8 +74,13 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
       if (suggestion.title) {
         formApi.change('title', suggestion.title);
       }
-      if (suggestion.description) {
-        formApi.change('description', suggestion.description);
+      // Build description from Title and Postcode (first segment)
+      const values = formApi.getState().values || {};
+      const titleVal = suggestion.title || values.title || '';
+      const postcodeFull = (values.postcode || '').trim();
+      const postcodePrefix = postcodeFull.split(' ')[0] || postcodeFull;
+      if (titleVal && postcodePrefix) {
+        formApi.change('description', `${titleVal} Available to rent in ${postcodePrefix}`);
       }
       if (suggestion.category) {
         // Category now aligned with form values in Sanity – use directly
@@ -112,7 +121,8 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
       friday: initialValues.availability?.friday ?? true,
       saturday: initialValues.availability?.saturday ?? true,
       sunday: initialValues.availability?.sunday ?? true,
-    }
+    },
+    multiday_pricing_discount: initialValues.multiday_pricing_discount ?? '20_percent_off'
   }), [
     initialValues.title,
     initialValues.description,
@@ -120,6 +130,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
     initialValues.collectionDelivery,
     initialValues.postcode,
     initialValues.dailyPrice,
+    initialValues.multiday_pricing_discount,
     initialValues.availability?.monday,
     initialValues.availability?.tuesday,
     initialValues.availability?.wednesday,
@@ -143,7 +154,8 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
         categoryLevel1: values.category,
         categoryLevel2: null,
         categoryLevel3: null,
-        Collection_or_Delivery: values.collectionDelivery
+          Collection_or_Delivery: values.collectionDelivery,
+          multiday_pricing_discount: values.multiday_pricing_discount
       },
       privateData: {},
       price: {
@@ -329,19 +341,67 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
             </label>
             <Field name="title" validate={value => !value ? 'Tool name is required' : undefined}>
               {({ input, meta }) => (
-                <>
+                <div className={css.suggestions}>
                   <input
                     {...input}
                     type="text"
                     placeholder="Enter tool name"
                     className={css.input}
                     ref={el => { titleInputRef.current = el; }}
+                    onChange={e => {
+                      input.onChange(e);
+                      const q = (e.target.value || '').trim().toLowerCase();
+                      if (q.length < 2) {
+                        setTitleSuggestions([]);
+                        setShowSuggestions(false);
+                        return;
+                      }
+                      const all = toolDescriptionsClient.getAllTools();
+                      const hits = all
+                        .filter(t => (t.title || t.className || '').toLowerCase().includes(q))
+                        .slice(0, 8);
+                      setTitleSuggestions(hits);
+                      setShowSuggestions(hits.length > 0);
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setShowSuggestions(false), 150);
+                    }}
+                    onFocus={() => {
+                      setShowSuggestions(titleSuggestions.length > 0);
+                    }}
                   />
+                  {showSuggestions && (
+                    <div className={css.suggestionsList}>
+                      {titleSuggestions.map(s => (
+                        <div
+                          key={s.id}
+                          className={css.suggestionItem}
+                          onMouseDown={e => {
+                            e.preventDefault();
+                            // Apply selection
+                            const values = form.getState().values || {};
+                            const postcodeFull = (values.postcode || '').trim();
+                            const postcodePrefix = postcodeFull.split(' ')[0] || postcodeFull;
+                            form.change('title', s.title || s.className);
+                            if (s.category) form.change('category', s.category);
+                            if (s.price != null) form.change('dailyPrice', String(s.price));
+                            if ((s.title || s.className) && postcodePrefix) {
+                              form.change('description', `${(s.title || s.className)} Available to rent in ${postcodePrefix}`);
+                            }
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {(s.title || s.className)}
+                          {s.categoryLabel ? ` · ${s.categoryLabel}` : ''}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {showTitleTip && (
                     <div className={css.helpText}>Start writing your own title and description.</div>
                   )}
                   {meta.error && meta.touched && <div className={css.error}>{meta.error}</div>}
-                </>
+                </div>
               )}
             </Field>
           </div>
@@ -440,6 +500,22 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                   </div>
                   {meta.error && meta.touched && <div className={css.error}>{meta.error}</div>}
                 </>
+              )}
+            </Field>
+          </div>
+          <div className={css.field}>
+            <label className={css.label}>Multi-day Pricing Discount (5 or more days bookings)</label>
+            <Field name="multiday_pricing_discount">
+              {({ input }) => (
+                <select {...input} className={css.select}>
+                  <option value="0_percent_off">No Discount on daily price</option>
+                  <option value="5_percent_off">5% Discount on daily price</option>
+                  <option value="10_percent_off">10% Discount on daily price</option>
+                  <option value="15_percent_off">15% Discount on daily price</option>
+                  <option value="20_percent_off">20% Discount on daily price (recommended)</option>
+                  <option value="25_percent_off">25% Discount on daily price</option>
+                  <option value="30_percent_off">30% Discount on daily price</option>
+                </select>
               )}
             </Field>
           </div>
