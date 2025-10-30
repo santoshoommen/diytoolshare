@@ -9,6 +9,7 @@
     "@mapbox/polyline": "^1.2.1",
     "@sentry/browser": "^8.55.0",
     "@sentry/node": "^8.55.0",
+    "@sanity/client": "^6.21.2",
     "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "autosize": "^5.0.2",

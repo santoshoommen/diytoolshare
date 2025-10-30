@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl';
 import classNames from 'classnames';
 import { IconSpinner, IconCheckmark, IconAlert } from '../../components';
 import imageClassificationService from '../../services/imageClassification';
-import { getToolDescription } from '../../data/toolDescriptions';
+import toolDescriptionsClient from '../../services/toolDescriptionsClient';
 import css from './ImageClassification.css';
 
 /**
@@ -27,6 +27,7 @@ const ImageClassification = props => {
   const [isClassifying, setIsClassifying] = useState(false);
   const [classificationResult, setClassificationResult] = useState(null);
   const [suggestionAccepted, setSuggestionAccepted] = useState(false);
+  const [toolDescription, setToolDescription] = useState(null);
   const [error, setError] = useState(null);
 
   // Classify image when imageFile changes
@@ -49,21 +50,23 @@ const ImageClassification = props => {
       
       if (result.success) {
         setClassificationResult(result);
-        
-        // Get tool description for the top prediction
-        const toolDescription = getToolDescription(result.topPrediction.className);
+        // Ensure CMS data is loaded and get description
+        await toolDescriptionsClient.ensureLoaded();
+        const desc = toolDescriptionsClient.getToolDescriptionSync(result.topPrediction.className);
+        setToolDescription(desc);
         
         // Call the completion callback with full results
         if (onClassificationComplete) {
           onClassificationComplete({
             ...result,
-            toolDescription,
+            toolDescription: desc,
             suggestion: {
-              title: toolDescription.title,
-              description: toolDescription.description,
-              category: toolDescription.category,
-              features: toolDescription.features,
-              safetyNotes: toolDescription.safetyNotes
+              title: desc?.title,
+              description: desc?.description,
+              category: desc?.category,
+              features: desc?.features,
+              safetyNotes: desc?.safetyNotes,
+              price: desc?.price,
             }
           });
         }
@@ -80,13 +83,13 @@ const ImageClassification = props => {
 
   const handleAcceptSuggestion = () => {
     if (classificationResult && onSuggestionAccepted) {
-      const toolDescription = getToolDescription(classificationResult.topPrediction.className);
       onSuggestionAccepted({
-        title: toolDescription.title,
-        description: toolDescription.description,
-        category: toolDescription.category,
-        features: toolDescription.features,
-        safetyNotes: toolDescription.safetyNotes
+        title: toolDescription?.title,
+        description: toolDescription?.description,
+        category: toolDescription?.category,
+        features: toolDescription?.features,
+        safetyNotes: toolDescription?.safetyNotes,
+        price: toolDescription?.price,
       });
     }
     setSuggestionAccepted(true);
@@ -150,7 +153,7 @@ const ImageClassification = props => {
           <div className={css.predictionContainer}>
             <div className={css.predictionInfo}>
               <span className={css.predictedTool}>
-                {getToolDescription(topPrediction.className).title}
+                {toolDescription?.title || topPrediction.className}
               </span>
               <span className={classNames(css.confidence, {
                 [css.highConfidence]: isConfident,
@@ -182,7 +185,7 @@ const ImageClassification = props => {
                 />
               </h5>
               <p className={css.suggestionDescription}>
-                {getToolDescription(topPrediction.className).description}
+                {toolDescription?.description}
               </p>
               
               <div className={css.actionButtons}>
@@ -237,7 +240,7 @@ const ImageClassification = props => {
                 {classificationResult.predictions.slice(1, 4).map((prediction, index) => (
                   <li key={index} className={css.alternativeItem}>
                     <span className={css.alternativeName}>
-                      {getToolDescription(prediction.className).title}
+                      {prediction.className}
                     </span>
                     <span className={css.alternativeConfidence}>
                       {Math.round(prediction.confidence * 100)}%

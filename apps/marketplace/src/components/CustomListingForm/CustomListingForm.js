@@ -45,14 +45,11 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
 
   // Handle classification completion
   const handleClassificationComplete = useCallback((result) => {
-    console.log('Classification completed:', result);
     setClassificationResult(result);
   }, []);
 
   // Handle suggestion acceptance - auto-populate form fields
   const handleSuggestionAccepted = useCallback((suggestion, formApi) => {
-    console.log('Suggestion accepted:', suggestion);
-    
     if (suggestion && formApi) {
       // Auto-populate title and description
       if (suggestion.title) {
@@ -62,23 +59,17 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
         formApi.change('description', suggestion.description);
       }
       if (suggestion.category) {
-        // Map the category to our form's category values
-        const categoryMapping = {
-          'Power Tools': 'General_DIY__Home_Improvement',
-          'Hand Tools': 'General_DIY__Home_Improvement',
-          'Garden Tools': 'Garden__Outdoor',
-          'Automotive Tools': 'Automotive__Garage',
-          'Cleaning Tools': 'Cleaning__Maintenance'
-        };
-        const mappedCategory = categoryMapping[suggestion.category] || 'General_DIY__Home_Improvement';
-        formApi.change('category', mappedCategory);
+        // Category now aligned with form values in Sanity – use directly
+        formApi.change('category', suggestion.category);
+      }
+      if (suggestion.price != null) {
+        formApi.change('dailyPrice', String(suggestion.price));
       }
     }
   }, []);
 
   // Handle suggestion rejection
   const handleSuggestionRejected = useCallback((result) => {
-    console.log('Suggestion rejected:', result);
     setClassificationResult(null);
   }, []);
   
@@ -379,6 +370,8 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                     type="text"
                     placeholder="Enter postcode"
                     className={css.input}
+                    readOnly
+                    disabled
                   />
                   <div className={css.helpText}>Location from your profile</div>
                 </>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import imageClassificationService from '../../services/imageClassification';
-import { getToolDescription } from '../../data/toolDescriptions';
+import toolDescriptionsClient from '../../services/toolDescriptionsClient';
 import css from './ImageClassification.css';
 
 /**
@@ -33,6 +33,7 @@ const ImageClassificationTest = () => {
     setError(null);
 
     try {
+      await toolDescriptionsClient.ensureLoaded();
       const classificationResult = await imageClassificationService.classifyImage(selectedFile);
       setResult(classificationResult);
     } catch (err) {
@@ -116,7 +117,7 @@ const ImageClassificationTest = () => {
             <div>
               <h5>Top Prediction:</h5>
               <p>
-                <strong>{getToolDescription(result.topPrediction.className).title}</strong>
+                <strong>{toolDescriptionsClient.getToolDescriptionSync(result.topPrediction.className)?.title || result.topPrediction.className}</strong>
                 <br />
                 Confidence: {Math.round(result.topPrediction.confidence * 100)}%
                 <br />
@@ -124,13 +125,13 @@ const ImageClassificationTest = () => {
               </p>
 
               <h5>Tool Description:</h5>
-              <p>{getToolDescription(result.topPrediction.className).description}</p>
+              <p>{toolDescriptionsClient.getToolDescriptionSync(result.topPrediction.className)?.description}</p>
 
               <h5>All Predictions:</h5>
               <ul>
                 {result.predictions.map((prediction, index) => (
                   <li key={index}>
-                    {getToolDescription(prediction.className).title}: {Math.round(prediction.confidence * 100)}%
+                    {toolDescriptionsClient.getToolDescriptionSync(prediction.className)?.title || prediction.className}: {Math.round(prediction.confidence * 100)}%
                   </li>
                 ))}
               </ul>
