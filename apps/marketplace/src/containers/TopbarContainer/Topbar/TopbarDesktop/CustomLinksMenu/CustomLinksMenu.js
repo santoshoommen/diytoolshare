@@ -111,6 +111,7 @@ const CustomLinksMenu = ({
   hasClientSideContentReady,
   intl,
   showCreateListingsLink,
+  onManageDisableScrolling,
 }) => {
   const containerRef = useRef(null);
   const observer = useRef(null);
@@ -194,7 +195,7 @@ const CustomLinksMenu = ({
 
   // If there are no custom links, just render createListing link.
   if (customLinks?.length === 0 && showCreateListingsLink) {
-    return <CreateListingMenuLink customLinksMenuClass={css.createListingLinkOnly} />;
+    return <CreateListingMenuLink customLinksMenuClass={css.createListingLinkOnly} onManageDisableScrolling={onManageDisableScrolling} />;
   }
 
   const styleMaybe = mounted ? { style: { width: `${containerWidth}px` } } : {};
@@ -204,7 +205,7 @@ const CustomLinksMenu = ({
 
   return (
     <div className={css.customLinksMenu} ref={containerRef} {...styleMaybe}>
-      <PriorityLinks links={links} priorityLinks={priorityLinks} setLinks={setLinks} />
+      <PriorityLinks links={links} priorityLinks={priorityLinks} setLinks={setLinks} onManageDisableScrolling={onManageDisableScrolling} />
       {mounted && hasMenuLinks ? (
         <LinksMenu
           id="linksMenu"

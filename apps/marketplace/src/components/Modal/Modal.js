@@ -148,6 +148,7 @@ export class ModalComponent extends Component {
       isClosedClassName = css.isClosed,
       isOpen,
       usePortal,
+      id,
     } = this.props;
 
     const closeModalMessage = intl.formatMessage({ id: 'Modal.closeModal' });
@@ -187,7 +188,7 @@ export class ModalComponent extends Component {
     // the DOM hierarchy of the parent component unlike Modal inside Portal.
 
     return !usePortal ? (
-      <div className={classes}>
+      <div id={id} className={classes}>
         <div className={scrollLayerClasses}>
           <div className={containerClasses}>
             {closeBtn}
@@ -197,7 +198,7 @@ export class ModalComponent extends Component {
       </div>
     ) : portalRoot ? (
       <Portal portalRoot={portalRoot}>
-        <div className={classes}>
+        <div id={id} className={classes}>
           <div className={scrollLayerClasses}>
             <div
               className={classNames(containerClasses, css.focusedDiv)}

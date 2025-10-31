@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { useConfiguration } from '../../context/configurationContext';
 import { createSlug } from '../../util/urlHelpers';
+import { geocodePostcode } from '../../util/postcodeGeocoding';
 import CustomListingForm from '../../components/CustomListingForm';
 import css from './CustomListingPage.module.css';
 
@@ -42,11 +43,25 @@ const CustomListingPage = ({
       console.log('Form images:', formData.images);
       console.log('Images being sent to API:', formData.images);
 
+      // Geocode postcode to get coordinates for map search
+      let geolocation = null;
+      if (formData.postcode) {
+        geolocation = await geocodePostcode(formData.postcode);
+        if (geolocation) {
+          console.log('Geocoded postcode:', formData.postcode, 'to coordinates:', geolocation);
+          console.log('Geolocation type:', geolocation.constructor.name);
+          console.log('Geolocation lat:', geolocation.lat, 'lng:', geolocation.lng);
+        } else {
+          console.warn('Failed to geocode postcode:', formData.postcode);
+        }
+      }
+
       // Prepare the data for the API - only include allowed fields
       const listingData = {
         title: formData.title,
         description: formData.description,
         images: formData.images, // This will be processed by imageIds function in the duck
+        geolocation: geolocation, // Add geolocation for map search
         publicData: {
           listingType: 'list-your-tool',
           transactionProcessAlias: 'default-booking/release-1',

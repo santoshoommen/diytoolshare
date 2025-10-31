@@ -73,18 +73,17 @@
 
 .isOpenInPortal {
   composes: isOpen;
-  display: block;
+  display: flex;
+  flex-direction: column;
   height: calc(var(--vh, 1vh) * 100);
-  position: absolute;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 
   @media (--viewportMedium) {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    /* Same on desktop */
   }
 }
 

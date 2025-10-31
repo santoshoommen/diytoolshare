@@ -1,0 +1,241 @@
+.root {
+  padding: 40px 32px;
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  text-align: center;
+  color: var(--colorWhite);
+}
+
+.description {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.optionWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 2px solid #c89d3a;
+  border-radius: 8px;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.optionWrapper:hover {
+  border-color: #d4a73e;
+  box-shadow: 0 2px 8px rgba(200, 157, 58, 0.2);
+}
+
+.optionButton {
+  width: 100%;
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  border: none;
+}
+
+.optionButton:hover {
+  transform: translateY(-1px);
+}
+
+.optionButton:active {
+  transform: translateY(0);
+}
+
+.optionDescription {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.5;
+  text-align: center;
+  padding: 0;
+}
+
+.rentButton {
+  background-color: #e4b73e;
+  color: var(--colorBlack);
+}
+
+.rentButton:hover {
+  background-color: #d4a73e;
+  box-shadow: 0 4px 12px rgba(228, 183, 62, 0.4);
+}
+
+.wishlistButton {
+  background-color: var(--colorWhite);
+  color: var(--colorBlack);
+  border: 2px solid #c89d3a !important; /* Orange-brown border color */
+}
+
+.wishlistButton:hover {
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(212, 167, 62, 0.3);
+}
+
+.modal {
+  /* Override default modal styles */
+}
+
+.modalContent {
+  /* Modal content wrapper - center align */
+  text-align: center;
+}
+
+.modalContainer {
+  /* Modal container - gradient background on the modal itself, rounded corners, centered */
+  max-width: 480px !important;
+  width: calc(100% - 32px) !important;
+  margin: auto;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  background-color: #1f1f1f; /* Fallback */
+  border-radius: 20px !important;
+  overflow: visible !important; /* Allow close button to be visible */
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  position: relative; /* Ensure positioning context for close button */
+}
+
+/* Scoped scrollLayer - only affects our modal via the className we pass */
+/* This class is scoped via CSS modules and only applied to our modal via scrollLayerClassName prop */
+.scrollLayer {
+  /* Transparent overlay with blur - more transparent like before */
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  /* Always use flex for proper layout */
+  display: flex !important;
+  min-height: 100vh !important;
+  padding: 24px !important;
+  /* Center content on desktop/tablet */
+  @media (min-width: 768px) {
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* On mobile, align to top */
+  @media (max-width: 767px) {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+}
+
+/* Scope all modal styles to only our modal by using the modal className */
+.modal :global(.closeText) {
+  display: inline-block !important;
+  visibility: visible !important;
+  color: var(--colorWhite) !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  margin-right: 4px !important;
+}
+
+/* Ensure close icon is visible and properly styled - white */
+.modal :global(.closeIcon) {
+  display: inline-block !important;
+  visibility: visible !important;
+  margin-left: 4px !important;
+  opacity: 1 !important;
+}
+
+/* Ensure the SVG icon itself is visible - white */
+.modal :global(.closeIcon svg) {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  stroke: var(--colorWhite) !important;
+  fill: var(--colorWhite) !important;
+}
+
+.modal :global(.marketplaceModalCloseStyles:hover .closeIcon svg),
+.modal :global(.marketplaceModalCloseStyles:active .closeIcon svg) {
+  stroke: rgba(255, 255, 255, 0.8) !important;
+  fill: rgba(255, 255, 255, 0.8) !important;
+}
+
+.modal :global(.marketplaceModalCloseStyles:hover .closeText) {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Ensure the Button wrapper is visible and positioned correctly - white text */
+.modal :global(.marketplaceModalCloseStyles) {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important; /* Override fixed positioning */
+  top: 16px !important;
+  right: 16px !important;
+  padding: 8px 12px !important;
+  margin: 0 !important;
+  color: var(--colorWhite) !important;
+  background-color: transparent !important;
+  align-items: center !important;
+}
+
+/* Position close button nav - relative to container */
+.modal :global(.marketplaceModalCloseNav) {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important; /* High z-index to ensure visibility */
+  display: block !important;
+  visibility: visible !important;
+}
+
+@media (min-width: 768px) {
+  .modal :global(.marketplaceModalCloseNav) {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+  }
+  
+  .modal :global(.marketplaceModalCloseStyles) {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    padding: 12px !important;
+  }
+}
+
+/* Ensure container has rounded corners and proper sizing, centered */
+/* Use the modal className to scope these styles */
+.modal :global(.isOpenInPortal) {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+}
+
+/* The scrollLayer class above already handles centering, no need to duplicate */
+
+.modal :global(.isOpenInPortal) :global(.container) {
+  border-radius: 16px !important;
+  overflow: visible !important; /* Allow close button to be visible */
+  border-bottom: none !important;
+  margin: 0 !important;
+  flex-basis: auto !important;
+  min-height: auto !important;
+  height: auto !important;
+  position: relative !important; /* Ensure positioning context for close button */
+  align-self: center !important;
+}

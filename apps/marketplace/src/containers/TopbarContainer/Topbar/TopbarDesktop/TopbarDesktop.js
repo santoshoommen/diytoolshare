@@ -142,6 +142,7 @@ const TopbarDesktop = props => {
     showSearchForm,
     showCreateListingsLink,
     inboxTab,
+    onManageDisableScrolling,
   } = props;
   const [mounted, setMounted] = useState(false);
 
@@ -204,6 +205,7 @@ const TopbarDesktop = props => {
         intl={intl}
         hasClientSideContentReady={authenticatedOnClientSide || !isAuthenticatedOrJustHydrated}
         showCreateListingsLink={showCreateListingsLink}
+        onManageDisableScrolling={onManageDisableScrolling}
       />
 
       {inboxLinkMaybe}

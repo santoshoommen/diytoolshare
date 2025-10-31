@@ -16,6 +16,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
   const [uploadErrors, setUploadErrors] = useState({});
   const [lastUploadedImage, setLastUploadedImage] = useState(null);
   const [classificationResult, setClassificationResult] = useState(null);
+  const [showClassificationSection, setShowClassificationSection] = useState(false);
   const titleInputRef = useRef(null);
   const [showTitleTip, setShowTitleTip] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -90,11 +91,15 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
         formApi.change('dailyPrice', String(suggestion.price));
       }
     }
+    // Hide the classification section after accepting
+    setClassificationResult(null);
+    setShowClassificationSection(false);
   }, []);
 
   // Handle suggestion rejection
   const handleSuggestionRejected = useCallback((result) => {
     setClassificationResult(null);
+    setShowClassificationSection(false);
   }, []);
   
   const handleWriteOwn = useCallback(() => {
@@ -217,6 +222,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                         if (index === 0 || newImages.length === 0) {
                           setLastUploadedImage(null);
                           setClassificationResult(null);
+                          setShowClassificationSection(false);
                         }
                       }}
                     >
@@ -265,6 +271,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                         // Only trigger AI classification for the first photo
                         if (currentImages.length === 0) {
                           setLastUploadedImage(file);
+                          setShowClassificationSection(true);
                         }
                         
                         // Remove from uploading state
@@ -311,7 +318,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
         </div>
 
         {/* Image Classification Section */}
-        {lastUploadedImage && (
+        {lastUploadedImage && showClassificationSection && (
           <div className={css.section}>
             <ImageClassification
               imageFile={lastUploadedImage}
@@ -325,6 +332,8 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                   form.change('images', imgs.slice(1));
                 }
                 setLastUploadedImage(null);
+                setClassificationResult(null);
+                setShowClassificationSection(false);
               }}
               disabled={isSubmitting}
             />
