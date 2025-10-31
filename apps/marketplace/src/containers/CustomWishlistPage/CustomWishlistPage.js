@@ -33,6 +33,7 @@ const CustomWishlistPage = ({ initialValues, onCreateListingDraft, onPublishList
         publicData: {
           listingType: 'request-a-tool',
           transactionProcessAlias: 'default-booking/release-1',
+          unitType: 'day',
           categoryLevel1: values.category,
           requestStart: values.startDate,
           requestEnd: values.endDate,
