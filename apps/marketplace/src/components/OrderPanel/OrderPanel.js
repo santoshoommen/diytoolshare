@@ -308,9 +308,10 @@ const OrderPanel = props => {
 
   const price = listing?.attributes?.price;
   const isPaymentProcess = processName !== INQUIRY_PROCESS_NAME;
+  const isWishlistListing = listingType === 'request-a-tool';
 
-  const showPriceMissing = isPaymentProcess && !price;
-  const showInvalidCurrency = isPaymentProcess && price?.currency !== marketplaceCurrency;
+  const showPriceMissing = isPaymentProcess && !price && !isWishlistListing;
+  const showInvalidCurrency = isPaymentProcess && price?.currency !== marketplaceCurrency && !isWishlistListing;
 
   const timeZone = listing?.attributes?.availabilityPlan?.timezone;
   const isClosed = listing?.attributes?.state === LISTING_STATE_CLOSED;
