@@ -1,0 +1,29 @@
+@import '../CustomListingForm/CustomListingForm.module.css';
+
+.root { composes: root from '../CustomListingForm/CustomListingForm.module.css'; }
+.header { composes: header from '../CustomListingForm/CustomListingForm.module.css'; }
+.title { composes: title from '../CustomListingForm/CustomListingForm.module.css'; }
+.form { composes: form from '../CustomListingForm/CustomListingForm.module.css'; }
+.section { composes: section from '../CustomListingForm/CustomListingForm.module.css'; }
+.sectionTitle { composes: sectionTitle from '../CustomListingForm/CustomListingForm.module.css'; }
+.field { composes: field from '../CustomListingForm/CustomListingForm.module.css'; }
+.label { composes: label from '../CustomListingForm/CustomListingForm.module.css'; }
+.input { composes: input from '../CustomListingForm/CustomListingForm.module.css'; }
+.select { composes: select from '../CustomListingForm/CustomListingForm.module.css'; }
+.textarea { composes: textarea from '../CustomListingForm/CustomListingForm.module.css'; }
+.helpText { composes: helpText from '../CustomListingForm/CustomListingForm.module.css'; }
+.submitSection { composes: submitSection from '../CustomListingForm/CustomListingForm.module.css'; }
+.submitButton { composes: submitButton from '../CustomListingForm/CustomListingForm.module.css'; }
+
+/* Suggestions & grid */
+.suggestions { composes: suggestions from '../CustomListingForm/CustomListingForm.module.css'; }
+.suggestionsList { composes: suggestionsList from '../CustomListingForm/CustomListingForm.module.css'; }
+.suggestionItem { composes: suggestionItem from '../CustomListingForm/CustomListingForm.module.css'; }
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+

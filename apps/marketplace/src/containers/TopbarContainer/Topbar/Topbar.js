@@ -254,6 +254,7 @@ const TopbarComponent = props => {
       customLinks={customLinks}
       showCreateListingsLink={showCreateListingsLink}
       inboxTab={topbarInboxTab}
+      onManageDisableScrolling={onManageDisableScrolling}
     />
   );
 
@@ -344,6 +345,7 @@ const TopbarComponent = props => {
           currentUser={currentUser}
           currentPage={resolvedCurrentPage}
           initialSearchFormValues={initialSearchFormValues}
+          onManageDisableScrolling={onManageDisableScrolling}
           intl={intl}
           isAuthenticated={isAuthenticated}
           notificationCount={notificationCount}

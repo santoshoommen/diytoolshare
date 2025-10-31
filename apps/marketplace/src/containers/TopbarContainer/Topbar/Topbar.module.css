@@ -177,6 +177,7 @@
     border-bottom: none;
   }
 }
+
 .modalContainerSearchForm {
   composes: modalContainer;
   padding: 0;

@@ -2,7 +2,7 @@
  *  TopbarMobileMenu prints the menu content for authenticated user or
  * shows login actions for those who are not authenticated.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import classNames from 'classnames';
 
 import { ACCOUNT_SETTINGS_PAGES } from '../../../../routing/routeConfiguration';
@@ -15,12 +15,14 @@ import {
   InlineTextButton,
   NamedLink,
   NotificationBadge,
+  ListingTypeSelectionModal,
 } from '../../../../components';
 
 import css from './TopbarMobileMenu.module.css';
 
-const CustomLinkComponent = ({ linkConfig, currentPage }) => {
+const CustomLinkComponent = ({ linkConfig, currentPage, onManageDisableScrolling }) => {
   const { group, text, type, href, route } = linkConfig;
+  
   const getCurrentPageClass = page => {
     const hasPageName = name => currentPage?.indexOf(name) === 0;
     const isCMSPage = pageId => hasPageName('CMSPage') && currentPage === `${page}:${pageId}`;
@@ -31,6 +33,7 @@ const CustomLinkComponent = ({ linkConfig, currentPage }) => {
       ? css.currentPage
       : null;
   };
+
 
   // Note: if the config contains 'route' keyword,
   // then in-app linking config has been resolved already.
@@ -77,6 +80,7 @@ const TopbarMobileMenu = props => {
     customLinks,
     onLogout,
     showCreateListingsLink,
+    onManageDisableScrolling,
   } = props;
 
   const user = ensureCurrentUser(currentUser);
@@ -87,14 +91,28 @@ const TopbarMobileMenu = props => {
         key={`${linkConfig.text}_${index}`}
         linkConfig={linkConfig}
         currentPage={currentPage}
+        onManageDisableScrolling={onManageDisableScrolling}
       />
     );
   });
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const createListingsLinkMaybe = showCreateListingsLink ? (
-    <NamedLink className={css.createNewListingLink} name="CustomListingPage">
-      <FormattedMessage id="TopbarMobileMenu.newListingLink" />
-    </NamedLink>
+    <>
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
+        className={css.createNewListingLink}
+      >
+        <FormattedMessage id="TopbarMobileMenu.newListingLink" />
+      </button>
+      <ListingTypeSelectionModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        onManageDisableScrolling={onManageDisableScrolling}
+      />
+    </>
   ) : null;
 
   if (!isAuthenticated) {

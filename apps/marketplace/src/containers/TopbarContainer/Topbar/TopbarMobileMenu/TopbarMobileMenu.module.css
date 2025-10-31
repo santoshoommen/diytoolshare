@@ -147,6 +147,36 @@
 
 .createNewListingLink {
   composes: buttonPrimary from global;
+  background-color: var(--colorBlack) !important;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: var(--colorGrey700) !important;
+  }
+}
+
+.navigationLink button {
+  /* Reset button styles to match link appearance */
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  color: var(--marketplaceColor);
+  font-weight: var(--fontWeightBold);
+  font-size: 21px;
+  line-height: 24px;
+  text-decoration: none;
+  
+  &:hover {
+    color: var(--marketplaceColorDark);
+    text-decoration: none;
+  }
 }
 
 .authenticationGreeting {

@@ -18,6 +18,7 @@ const CMSPage = loadable(() => import(/* webpackChunkName: "CMSPage" */ '../cont
 const ContactDetailsPage = loadable(() => import(/* webpackChunkName: "ContactDetailsPage" */ '../containers/ContactDetailsPage/ContactDetailsPage'));
 const EditListingPage = loadable(() => import(/* webpackChunkName: "EditListingPage" */ '../containers/EditListingPage/EditListingPage'));
 const CustomListingPage = loadable(() => import(/* webpackChunkName: "CustomListingPage" */ '../containers/CustomListingPage/CustomListingPageContainer'));
+const CustomWishlistPage = loadable(() => import(/* webpackChunkName: "CustomWishlistPage" */ '../containers/CustomWishlistPage/CustomWishlistPageContainer'));
 const EmailVerificationPage = loadable(() => import(/* webpackChunkName: "EmailVerificationPage" */ '../containers/EmailVerificationPage/EmailVerificationPage'));
 const InboxPage = loadable(() => import(/* webpackChunkName: "InboxPage" */ '../containers/InboxPage/InboxPage'));
 const LandingPage = loadable(() => import(/* webpackChunkName: "LandingPage" */ '../containers/LandingPage/LandingPage'));
@@ -171,6 +172,12 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       name: 'CustomListingPage',
       auth: true,
       component: CustomListingPage,
+    },
+    {
+      path: '/request-tool',
+      name: 'CustomWishlistPage',
+      auth: true,
+      component: CustomWishlistPage,
     },
     {
       path: '/create-listing/:id',

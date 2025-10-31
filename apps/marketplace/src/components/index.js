@@ -85,6 +85,7 @@ export { default as MenuLabel } from './MenuLabel/MenuLabel';
 export { default as Menu } from './Menu/Menu';
 
 // Modal
+export { default as ListingTypeSelectionModal } from './ListingTypeSelectionModal';
 export { default as Modal } from './Modal/Modal';
 export { default as ModalInMobile } from './ModalInMobile/ModalInMobile';
 
