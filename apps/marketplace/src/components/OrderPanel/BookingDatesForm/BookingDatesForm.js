@@ -753,7 +753,7 @@ export const BookingDatesForm = props => {
               isDayBlocked={isDayBlocked}
               isOutsideRange={isOutsideRange}
               isBlockedBetween={isBlockedBetween(relevantTimeSlots, timeZone)}
-              disabled={fetchLineItemsInProgress || (priceVariants.length > 0 && !priceVariantName)}
+              disabled={priceVariants.length > 0 && !priceVariantName}
               showLabelAsDisabled={priceVariants.length > 0 && !priceVariantName}
               showPreviousMonthStepper={showPreviousMonthStepper(currentMonth, timeZone)}
               showNextMonthStepper={showNextMonthStepper(

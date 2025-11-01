@@ -335,6 +335,11 @@ class StripePaymentForm extends Component {
       this.card.unmount();
       this.card = null;
     }
+    // Unsubscribe from form value changes
+    if (this.unsubscribeForm) {
+      this.unsubscribeForm();
+      this.unsubscribeForm = null;
+    }
   }
 
   initializeStripeElement(element) {
@@ -344,6 +349,26 @@ class StripePaymentForm extends Component {
       this.card = elements.create('card', { style: cardStyles });
       this.card.mount(element || this.cardContainer);
       this.card.addEventListener('change', this.handleCardValueChange);
+      
+      // Set initial country if available from form values so Stripe shows correct label (postcode vs zip code)
+      // Use setTimeout to ensure the element is fully mounted before updating
+      setTimeout(() => {
+        if (this.card) {
+          if (this.finalFormAPI) {
+            const formValues = this.finalFormAPI.getState()?.values || {};
+            const country = formValues.country || 'GB'; // Default to GB for UK marketplace
+            const postalCode = formValues.postal;
+            // Only include postalCode if it's a non-empty string
+            const value = postalCode && typeof postalCode === 'string' && postalCode.trim()
+              ? { postalCode: postalCode.trim(), country }
+              : { country };
+            this.card.update({ value });
+          } else {
+            // Fallback: set GB even if form API isn't available yet
+            this.card.update({ value: { country: 'GB' } });
+          }
+        }
+      }, 0);
       // EventListener is the only way to simulate breakpoints with Stripe.
       window.addEventListener('resize', () => {
         if (this.card) {
@@ -478,6 +503,33 @@ class StripePaymentForm extends Component {
     } = formRenderProps;
 
     this.finalFormAPI = formApi;
+    
+    // Subscribe to form value changes when form API is available
+    if (formApi && !this.unsubscribeForm) {
+      this.unsubscribeForm = formApi.subscribe(
+        ({ values }) => {
+          if (this.card && values?.country) {
+            const postalCode = values.postal;
+            // Only include postalCode if it's a non-empty string
+            const value = postalCode && typeof postalCode === 'string' && postalCode.trim()
+              ? { postalCode: postalCode.trim(), country: values.country }
+              : { country: values.country };
+            this.card.update({ value });
+          }
+        },
+        { values: true }
+      );
+    }
+    
+    // Update card element with current country if available
+    if (this.card && values?.country) {
+      const postalCode = values.postal;
+      // Only include postalCode if it's a non-empty string
+      const value = postalCode && typeof postalCode === 'string' && postalCode.trim()
+        ? { postalCode: postalCode.trim(), country: values.country }
+        : { country: values.country };
+      this.card.update({ value });
+    }
 
     const ensuredDefaultPaymentMethod = ensurePaymentMethodCard(defaultPaymentMethod);
     const billingDetailsNeeded = !(hasHandledCardPayment || confirmPaymentError);
