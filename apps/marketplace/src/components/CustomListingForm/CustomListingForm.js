@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Form, Field } from 'react-final-form';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
-import { Button, FieldTextInput, FieldSelect, FieldCheckbox } from '../';
+import { Button, FieldTextInput, FieldSelect, FieldCheckbox, Modal } from '../';
 import categoriesClient from '../../services/categoriesClient';
 import toolDescriptionsClient from '../../services/toolDescriptionsClient';
 import { createInstance } from '../../util/sdkLoader';
@@ -17,6 +17,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
   const [lastUploadedImage, setLastUploadedImage] = useState(null);
   const [classificationResult, setClassificationResult] = useState(null);
   const [showClassificationSection, setShowClassificationSection] = useState(false);
+  const [isClassificationModalOpen, setIsClassificationModalOpen] = useState(false);
   const titleInputRef = useRef(null);
   const [showTitleTip, setShowTitleTip] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -68,6 +69,22 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
     setClassificationResult(result);
   }, []);
 
+  // Handle modal close
+  const handleModalClose = useCallback(() => {
+    setIsClassificationModalOpen(false);
+    setShowClassificationSection(false);
+    setClassificationResult(null);
+  }, []);
+
+  // Manage body scrolling (simple local implementation)
+  const manageDisableScrolling = useCallback((id, shouldDisable) => {
+    if (shouldDisable) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, []);
+
   // Handle suggestion acceptance - auto-populate form fields
   const handleSuggestionAccepted = useCallback((suggestion, formApi) => {
     if (suggestion && formApi) {
@@ -91,15 +108,17 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
         formApi.change('dailyPrice', String(suggestion.price));
       }
     }
-    // Hide the classification section after accepting
+    // Hide the classification modal after accepting
     setClassificationResult(null);
     setShowClassificationSection(false);
+    setIsClassificationModalOpen(false);
   }, []);
 
   // Handle suggestion rejection
   const handleSuggestionRejected = useCallback((result) => {
     setClassificationResult(null);
     setShowClassificationSection(false);
+    setIsClassificationModalOpen(false);
   }, []);
   
   const handleWriteOwn = useCallback(() => {
@@ -223,6 +242,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                           setLastUploadedImage(null);
                           setClassificationResult(null);
                           setShowClassificationSection(false);
+                          setIsClassificationModalOpen(false);
                         }
                       }}
                     >
@@ -272,6 +292,7 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                         if (currentImages.length === 0) {
                           setLastUploadedImage(file);
                           setShowClassificationSection(true);
+                          setIsClassificationModalOpen(true);
                         }
                         
                         // Remove from uploading state
@@ -317,15 +338,25 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
           </Field>
         </div>
 
-        {/* Image Classification Section */}
-        {lastUploadedImage && showClassificationSection && (
-          <div className={css.section}>
+        {/* Image Classification Modal */}
+        {lastUploadedImage && (
+          <Modal
+            id="ImageClassificationModal"
+            isOpen={isClassificationModalOpen}
+            onClose={handleModalClose}
+            onManageDisableScrolling={manageDisableScrolling}
+            usePortal={true}
+            contentClassName={css.classificationModalContent}
+          >
             <ImageClassification
               imageFile={lastUploadedImage}
               onClassificationComplete={handleClassificationComplete}
               onSuggestionAccepted={(suggestion) => handleSuggestionAccepted(suggestion, form)}
               onSuggestionRejected={handleSuggestionRejected}
-              onWriteOwn={handleWriteOwn}
+              onWriteOwn={() => {
+                handleWriteOwn();
+                setIsClassificationModalOpen(false);
+              }}
               onRetryUpload={() => {
                 const imgs = form.getState().values.images || [];
                 if (imgs.length > 0) {
@@ -334,10 +365,11 @@ const CustomListingForm = ({ onSubmit, onCancel, initialValues = {}, isSubmittin
                 setLastUploadedImage(null);
                 setClassificationResult(null);
                 setShowClassificationSection(false);
+                setIsClassificationModalOpen(false);
               }}
               disabled={isSubmitting}
             />
-          </div>
+          </Modal>
         )}
 
         {/* Listing Details Section */}
