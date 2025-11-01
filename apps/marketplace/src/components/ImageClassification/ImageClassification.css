@@ -88,6 +88,8 @@
   background-color: var(--colorWhite);
   border: 1px solid var(--colorGrey200);
   border-radius: 6px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .classificationHeader {
@@ -210,16 +212,21 @@
 
 .previewWrapper {
   width: 100%;
+  max-height: 400px;
   border-radius: 8px;
   overflow: hidden;
   background: var(--colorGrey50);
   border: 1px solid var(--colorGrey200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .previewImage {
   width: 100%;
+  max-height: 400px;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .confirmText {
