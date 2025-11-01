@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Field } from 'react-final-form';
 import classNames from 'classnames';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 
-import { Button, FieldTextInput, FieldSelect, FieldCheckbox } from '../../components';
+import { Button } from '../../components';
 import css from './IssueReport.module.css';
 
 /**
@@ -68,11 +67,11 @@ const IssueReport = props => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
+      try {
       // Here you would typically send the report to your backend
       const reportData = {
         ...formData,
-        transactionId,
+        transactionId: transactionId?.uuid || transactionId,
         listingTitle,
         timestamp: new Date().toISOString(),
         status: 'pending'
@@ -117,7 +116,7 @@ const IssueReport = props => {
         <div className={css.transactionInfo}>
           <div className={css.infoItem}>
             <span className={css.infoLabel}>Transaction ID:</span>
-            <span className={css.infoValue}>{transactionId}</span>
+            <span className={css.infoValue}>{transactionId?.uuid || transactionId}</span>
           </div>
           {listingTitle && (
             <div className={css.infoItem}>
@@ -162,28 +161,34 @@ const IssueReport = props => {
 
         {/* Severity Level */}
         <div className={css.formSection}>
-          <label className={css.sectionLabel}>
+          <label className={css.sectionLabel} htmlFor="severity">
             Severity Level
           </label>
-          <FieldSelect
+          <select
+            id="severity"
             name="severity"
             value={formData.severity}
-            onChange={(value) => handleInputChange('severity', value)}
-            options={currentIssue.severityOptions}
+            onChange={(e) => handleInputChange('severity', e.target.value)}
             className={css.severitySelect}
-          />
+          >
+            {currentIssue.severityOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Description */}
         <div className={css.formSection}>
-          <label className={css.sectionLabel}>
+          <label className={css.sectionLabel} htmlFor="description">
             Detailed Description
           </label>
-          <FieldTextInput
+          <textarea
+            id="description"
             name="description"
-            type="textarea"
             value={formData.description}
-            onChange={(value) => handleInputChange('description', value)}
+            onChange={(e) => handleInputChange('description', e.target.value)}
             placeholder="Please provide details about the issue, including dates, communication attempts, and any relevant information..."
             className={css.descriptionInput}
             rows={4}
@@ -196,40 +201,48 @@ const IssueReport = props => {
             Additional Information
           </label>
           <div className={css.checkboxes}>
-            <FieldCheckbox
-              name="contactAttempts"
-              checked={formData.contactAttempts}
-              onChange={(checked) => handleInputChange('contactAttempts', checked)}
-              label="I have attempted to contact the other party"
-            />
-            <FieldCheckbox
-              name="evidence"
-              checked={formData.evidence}
-              onChange={(checked) => handleInputChange('evidence', checked)}
-              label="I have evidence (messages, photos, etc.) to support this report"
-            />
+            <label className={css.checkboxLabel}>
+              <input
+                type="checkbox"
+                name="contactAttempts"
+                checked={formData.contactAttempts}
+                onChange={(e) => handleInputChange('contactAttempts', e.target.checked)}
+                className={css.checkbox}
+              />
+              <span>I have attempted to contact the other party</span>
+            </label>
+            <label className={css.checkboxLabel}>
+              <input
+                type="checkbox"
+                name="evidence"
+                checked={formData.evidence}
+                onChange={(e) => handleInputChange('evidence', e.target.checked)}
+                className={css.checkbox}
+              />
+              <span>I have evidence (messages, photos, etc.) to support this report</span>
+            </label>
           </div>
         </div>
 
         {/* Desired Resolution */}
         <div className={css.formSection}>
-          <label className={css.sectionLabel}>
+          <label className={css.sectionLabel} htmlFor="resolution">
             Desired Resolution
           </label>
-          <FieldSelect
+          <select
+            id="resolution"
             name="resolution"
             value={formData.resolution}
-            onChange={(value) => handleInputChange('resolution', value)}
-            options={[
-              { value: '', label: 'Select a resolution...' },
-              { value: 'refund', label: 'Request refund' },
-              { value: 'extension', label: 'Request time extension' },
-              { value: 'replacement', label: 'Request tool replacement' },
-              { value: 'mediation', label: 'Request mediation' },
-              { value: 'other', label: 'Other (please specify)' }
-            ]}
+            onChange={(e) => handleInputChange('resolution', e.target.value)}
             className={css.resolutionSelect}
-          />
+          >
+            <option value="">Select a resolution...</option>
+            <option value="refund">Request refund</option>
+            <option value="extension">Request time extension</option>
+            <option value="replacement">Request tool replacement</option>
+            <option value="mediation">Request mediation</option>
+            <option value="other">Other (please specify)</option>
+          </select>
         </div>
 
         {/* Action Buttons */}

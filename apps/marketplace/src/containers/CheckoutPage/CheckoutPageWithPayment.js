@@ -500,8 +500,12 @@ export const CheckoutPageWithPayment = props => {
 
   // If your marketplace works mostly in one country you can use initial values to select country automatically
   // e.g. {country: 'FI'}
-
-  const initialValuesForStripePayment = { name: userName, recipientName: userName };
+  // For UK marketplace, default to GB so Stripe shows "postcode" instead of "zip code"
+  const initialValuesForStripePayment = { 
+    name: userName, 
+    recipientName: userName,
+    country: 'GB' // Default to United Kingdom for UK marketplace
+  };
   const askShippingDetails =
     orderData?.deliveryMethod === 'shipping' &&
     !hasTransactionPassedPendingPayment(existingTransaction, process);

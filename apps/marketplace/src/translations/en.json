@@ -245,6 +245,8 @@
   "EditListingDetailsForm.categoryPlaceholder": "{categoryLevel, select, categoryLevel1 {Select category} other {Select subcategory}}",
   "EditListingDetailsForm.categoryRequired": "{categoryLevel, select, categoryLevel1 {You need to select a category.} other {You need to select a subcategory.}}",
   "EditListingDetailsForm.createListingDraftError": "Failed to create a draft listing. Please try again.",
+  "CustomListingPage.createListingError": "Failed to create listing. Please check your input and try again.",
+  "CustomListingPage.updateListingError": "Failed to update listing. Please try again.",
   "EditListingDetailsForm.defaultRequiredMessage": "Required",
   "EditListingDetailsForm.description": "Listing description",
   "EditListingDetailsForm.descriptionPlaceholder": "Describe your listing in more detail.",

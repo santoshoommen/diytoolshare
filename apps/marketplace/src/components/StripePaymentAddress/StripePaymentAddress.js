@@ -81,10 +81,34 @@ const StripePaymentAddress = props => {
     })
   );
 
-  const handleOnChange = event => {
+  const handlePostalCodeChange = event => {
     const value = event.target.value;
     form.change('postal', value);
-    card.update({ value: { postalCode: value } });
+    // Get current country from form values to pass to Stripe
+    const formValues = form.getState()?.values || {};
+    const country = formValues.country;
+    if (card && country) {
+      // Only include postalCode if it's a non-empty string
+      const updateValue = value && typeof value === 'string' && value.trim()
+        ? { postalCode: value.trim(), country }
+        : { country };
+      card.update({ value: updateValue });
+    }
+  };
+
+  const handleCountryChange = event => {
+    const country = event.target.value;
+    form.change('country', country);
+    // Update the Stripe card element with the country so it shows the correct label (postcode vs zip code)
+    if (card && country) {
+      const formValues = form.getState()?.values || {};
+      const postalCode = formValues.postal;
+      // Only include postalCode if it's a non-empty string
+      const updateValue = postalCode && typeof postalCode === 'string' && postalCode.trim()
+        ? { postalCode: postalCode.trim(), country }
+        : { country };
+      card.update({ value: updateValue });
+    }
   };
 
   // Use the language set in config.localization.locale to get the correct translations of the country names
@@ -130,7 +154,7 @@ const StripePaymentAddress = props => {
           placeholder={postalCodePlaceholder}
           validate={postalCodeRequired}
           onUnmount={() => form.change('postal', undefined)}
-          onChange={event => handleOnChange(event)}
+          onChange={event => handlePostalCodeChange(event)}
         />
 
         <FieldTextInput
@@ -166,6 +190,7 @@ const StripePaymentAddress = props => {
           className={css.field}
           label={countryLabel}
           validate={countryRequired}
+          onChange={handleCountryChange}
         >
           <option disabled value="">
             {countryPlaceholder}
